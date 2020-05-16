@@ -19,8 +19,8 @@ int main()
 
     nanoseconds dt{0};
 
-    const size_t K = 100;
-    const size_t N = 200;
+    const size_t K = 1000;
+    const size_t N = 500;
     for (int j = 0; j < K; ++j)
     {
         auto s = high_resolution_clock::now();
