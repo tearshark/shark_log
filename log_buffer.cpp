@@ -22,7 +22,7 @@ namespace shark_log
         ::free(m_bufferPtr);
     }
 
-    bool log_buffer::try_pop()
+    bool log_buffer::try_pop(log_file& file)
     {
         auto currentReadIndex = m_readIndex.load(std::memory_order_acquire);
 
@@ -37,7 +37,9 @@ namespace shark_log
             const log_type* type = log->type;
             if (type)
             {
-                type->formator(log);
+                if (file.write(&type->tid, sizeof(type->tid)) && file.write(&log->tick, sizeof(log->tick)))
+                    type->serialize(log, file);
+
                 log->type = nullptr;
             }
 

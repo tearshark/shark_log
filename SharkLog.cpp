@@ -9,17 +9,17 @@ using namespace shark_log;
 
 int main()
 {
-    shark_log_initialize();
+    shark_log_initialize(shark_log_stdfile_factory(), "C:/logs/mylog-{0:04d}{1:02d}{2:02d}-{3:02d}{4:02d}{5:02d}.bin");
 
     std::string hello = "Hello World!"s;
 
-    static_assert(std::is_same_v<decltype(shark_decval(3, 8.0f, "Hello World!")), log_info<int, float, const char *>>);
+    static_assert(std::is_same_v<decltype(shark_decval(3, 8.0f, "Hello World!")), log_info<int, float, const char *>>, "");
 
     sharkl_info("this is a test for disassembly {} / {}", 1, 2.0);
 
     nanoseconds dt{0};
 
-    const size_t K = 1000;
+    const size_t K = 1;
     const size_t N = 500;
     for (int j = 0; j < K; ++j)
     {

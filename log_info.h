@@ -11,6 +11,11 @@ namespace shark_log
     {
         fmt::print(f, format_str, std::get<_Indices>(std::forward<_Tuple>(_Tpl))...);
     }
+    template <typename S, class _Tuple, size_t... _Indices>
+    std::string format_print_impl(const S& format_str, _Tuple&& _Tpl, std::index_sequence<_Indices...>)
+    {
+        return fmt::format(format_str, std::get<_Indices>(std::forward<_Tuple>(_Tpl))...);
+    }
 
     struct log_buffer;
 
@@ -35,6 +40,7 @@ namespace shark_log
     {
         using this_type = log_info<_Args...>;
         using tuple_type = std::tuple<_Args...>;
+        using read_type = std::tuple<read_type_t<_Args>...>;
 
         tuple_type args;
 
@@ -46,7 +52,28 @@ namespace shark_log
         log_info(const log_info&) = default;
         log_info& operator =(const log_info&) = default;
 
-        static void format_and_destructor(void* pvthiz)
+        static bool serialize_and_destructor(void* pvthiz, log_file& file)
+        {
+            this_type* thiz = reinterpret_cast<this_type*>(pvthiz);
+            bool result = log_serialize_to_file(file, thiz->args);
+            thiz->~log_info();
+
+            return result;
+        }
+
+        static bool translate_to_text(log_type& type, log_file& source, log_file& target)
+        {
+            read_type value = log_serialize_from_file<read_type>(source);
+            std::string text = format_print_impl(type.str, value, std::index_sequence_for<_Args...>{});
+
+            if (!target.write(text.c_str(), text.size()))
+                return false;
+            if (!target.write("\r\n", 2))
+                return false;
+            return true;
+        }
+
+        static void format_and_destructor(void* pvthiz, log_file& file)
         {
             this_type* thiz = reinterpret_cast<this_type*>(pvthiz);
             //const log_type& type = *thiz->type;

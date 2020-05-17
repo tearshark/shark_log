@@ -171,13 +171,16 @@
   <ItemGroup>
     <ClCompile Include="log.cpp" />
     <ClCompile Include="log_buffer.cpp" />
+    <ClCompile Include="log_file.cpp" />
     <ClCompile Include="SharkLog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="log.h" />
     <ClInclude Include="log_buffer.h" />
     <ClInclude Include="log_const.h" />
+    <ClInclude Include="log_file.h" />
     <ClInclude Include="log_info.h" />
+    <ClInclude Include="log_serialize.h" />
     <ClInclude Include="log_type.h" />
     <ClInclude Include="semaphore.h" />
   </ItemGroup>

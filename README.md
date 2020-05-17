@@ -38,6 +38,12 @@
     //本条日志的输入参数
     tuple<Args...> args;
 
+使用方法：
+
+    sharkl_info(str, ...);
+    sharkl_warn(str, ...);
+    sharkl_eror(str, ...);
+
 宏函数 sharkl_info() 定义一个 log_type 类型的局部变量 s_type，用于描述日志数据不变化的部分。
 然后获得跟本线程相关的 log_buffer，将 s_type 以及 变化部分的参数交给 log_buffer
 生成一条 log_info 描述的日志信息 log。然后通知日志格式化线程进行格式化并落地。<br>

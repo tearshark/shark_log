@@ -1,53 +1,40 @@
 #pragma once
 #include "log_const.h"
+#include "log_file.h"
+#include "log_serialize.h"
 
 namespace shark_log
 {
-    using log_formator = void(void*);
+    struct log_type;
+    
+    using log_method_formator = void(void*, log_file&);
+    using log_method_serialize = bool(void*, log_file&);
+    using log_method_translate = bool(log_type&, log_file&, log_file&);
 
+    //描述日志数据不变化的部分
+    //这个类型要为每一条日志输出语句生成一份静态局部变量，故有大部分信息是不会每次都改变的
+    //将这些信息搜集到一起防止，减少每次输出需要拷贝的数据量
     struct log_type
     {
-        log_formator* formator;
-        const char* str;
-        const char* file;
-        uint32_t line;
-        log_level level;
+        log_method_formator* formator;      //格式化日志的函数指针
+        log_method_serialize* serialize;
+        log_method_translate* translate;
+        const char* str;                    //日志格式化的字符串，由于利用{fmt}来实现，故需要遵守{fmt}的语法规则
+        const char* file;                   //产生本条日志的文件名
+        uint32_t line;                      //产生本条日志的行号
+        uint16_t tid;                       //本日志的类型编号，用于写入到二进制文件。之后可以利用tid找出来log_type，从而重新格式化为可阅读的文本日志。
+        log_level level;                    //产生本条日志的日志等级
     };
 
     template<class _Ty>
     struct log_convert
     {
-        using type = _Ty;
+        using type = typename std::remove_cv<typename std::remove_reference<_Ty>::type>::type;
     };
-    template<class _Ty>
-    struct log_convert<_Ty&>
+    template<class _Ty, size_t N>
+    struct log_convert<_Ty[N]>
     {
-        using type = _Ty;
-    };
-    template<class _Ty>
-    struct log_convert<_Ty&&>
-    {
-        using type = _Ty;
-    };
-    template<size_t N>
-    struct log_convert<const char[N]>
-    {
-        using type = const char*;
-    };
-    template<size_t N>
-    struct log_convert<const wchar_t[N]>
-    {
-        using type = const wchar_t*;
-    };
-    template<size_t N>
-    struct log_convert<const char16_t[N]>
-    {
-        using type = const char16_t*;
-    };
-    template<size_t N>
-    struct log_convert<const char32_t[N]>
-    {
-        using type = const char32_t*;
+        using type = typename std::remove_volatile<typename std::remove_reference<_Ty>::type>::type*;
     };
 
     template<class _Ty>
