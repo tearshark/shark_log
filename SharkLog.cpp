@@ -7,6 +7,8 @@ using namespace std::chrono;
 using namespace std::literals;
 using namespace shark_log;
 
+extern void test_spsc_ring_queue();
+
 //high_resolution_clock::now() : 45个时钟周期
 //_log_tick() : 0.7个时钟周期
 void test_tick_performace()
@@ -23,7 +25,7 @@ int main()
 {
 	const uint64_t freq = _log_tick_freq();
 
-    shark_log_initialize(shark_log_stdfile_factory(), "C:/logs/mylog-{0:04d}{1:02d}{2:02d}-{3:02d}{4:02d}{5:02d}.bin");
+    shark_log_initialize(shark_log_stdfile_factory(), "C:/logs/mylog-{0:04d}{1:02d}{2:02d}-{3:02d}{4:02d}{5:02d}.txt");
 
     std::string hello = "Hello World!"s;
 
@@ -34,7 +36,7 @@ int main()
     std::atomic<uint64_t> dt{ 0 };
 
     const size_t K = 1;
-    const size_t N = 1000;
+    const size_t N = 100;
     for (int j = 0; j < K; ++j)
     {
         std::atomic<uint64_t> s;

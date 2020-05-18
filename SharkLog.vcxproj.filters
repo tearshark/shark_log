@@ -30,6 +30,9 @@
     <ClCompile Include="log_const.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_ring_queue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="log_buffer.h">
@@ -54,6 +57,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="log_file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="spsc_ring_queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -27,7 +27,7 @@ namespace shark_log
 
 			log_buffer* logb = shark_log_local_buffer(_log_align_idx<info_t>());
 
-            uint32_t count;
+            size_t count;
             if ((count = logb->try_push<level>(s_type, std::forward<_Args>(args)...)) == 0)
             {
                 for(int i = 16; i > 0; --i)

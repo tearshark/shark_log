@@ -10,8 +10,6 @@ namespace shark_log
         , m_chunkIndex(chunk)
         , m_writeIndex(0)
         , m_readIndex(0)
-        , m_maximumReadIndex(0)
-        , m_count(0)
     {
         //2µÄÃÝ´Î·½
         assert((count & (count - 1)) == 0 && (count & ~(count - 1)) == count);
@@ -47,30 +45,76 @@ namespace shark_log
         }
 	}
 
-    bool log_buffer::try_pop(log_file* file)
-    {
-        auto currentReadIndex = m_readIndex.load(std::memory_order_acquire);
+	size_t log_buffer::consume_one(log_file* file)
+	{
+		const size_type write_index = m_writeIndex.load(std::memory_order_acquire);
+		const size_type read_index = m_readIndex.load(std::memory_order_relaxed); // only written from pop thread
+		if (write_index == read_index)
+			return 0;
 
-        for (;;)
-        {
-            auto idx = countToIndex(currentReadIndex);
-            if (idx == countToIndex(m_maximumReadIndex.load(std::memory_order_acquire)))
-                return false;
+		char* buf = m_bufferPtr + ((size_t)read_index << m_chunkIndex);
+		log_info_base* log = reinterpret_cast<log_info_base*>(buf);
+		const log_type* type = log->type;
+		if (type)
+		{
+			write_to_text(log, file);
+			log->type = nullptr;
+		}
 
-            char* buf = m_bufferPtr + (idx << m_chunkIndex);
-            log_info_base* log = reinterpret_cast<log_info_base*>(buf);
-            const log_type* type = log->type;
-            if (type)
-            {
-                write_to_binary(log, file);
-                log->type = nullptr;
-            }
+		size_type next = nextIndex(read_index);
+		m_readIndex.store(next, std::memory_order_release);
 
-            if (m_readIndex.compare_exchange_strong(currentReadIndex, nextIndex(currentReadIndex), std::memory_order_acq_rel))
-            {
-                --m_count;
-                return true;
-            }
-        }
-    }
+		return 1;
+	}
+
+	using size_type = log_buffer::size_type;
+	static void run_functor_and_delete(char* first, char* last, size_type chunkIndex, log_file* file)
+	{
+		for (; first != last; first += (size_type)((size_type)1u << chunkIndex))
+		{
+			log_info_base* log = reinterpret_cast<log_info_base*>(first);
+			const log_type* type = log->type;
+			if (type)
+			{
+				write_to_text(log, file);
+				log->type = nullptr;
+			}
+		}
+	}
+
+	size_type log_buffer::consume_all(log_file* file)
+	{
+		const size_type write_index = m_writeIndex.load(std::memory_order_acquire);
+		const size_type read_index = m_readIndex.load(std::memory_order_relaxed); // only written from pop thread
+
+		const size_type avail = read_available(write_index, read_index, m_bufferSize);
+		if (avail == 0)
+			return 0;
+
+		const size_type output_count = avail;
+
+		size_type new_read_index = read_index + output_count;
+
+		if (read_index + output_count > m_bufferSize)
+		{
+			/* copy data in two sections */
+			const size_type count0 = m_bufferSize - read_index;
+			const size_type count1 = output_count - count0;
+
+			run_functor_and_delete(m_bufferPtr + (read_index << m_chunkIndex), m_bufferPtr + (m_bufferSize << m_chunkIndex), m_chunkIndex, file);
+			run_functor_and_delete(m_bufferPtr, m_bufferPtr + (count1 << m_chunkIndex), m_chunkIndex, file);
+
+			new_read_index -= m_bufferSize;
+		}
+		else
+		{
+			run_functor_and_delete(m_bufferPtr + (read_index << m_chunkIndex), m_bufferPtr + ((read_index + output_count) << m_chunkIndex), m_chunkIndex, file);
+
+			if (new_read_index == m_bufferSize)
+				new_read_index = 0;
+		}
+
+		m_readIndex.store(new_read_index, std::memory_order_release);
+		return output_count;
+	}
 }

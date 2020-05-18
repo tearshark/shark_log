@@ -64,7 +64,7 @@ namespace shark_log
             for (uint32_t i = 0; i < (uint32_t)buffers.size(); ++i)
             {
                 auto* logb = buffers[i].get();
-                while (logb->try_pop(file));
+                logb->consume_all(file);
             }
         }
     };
@@ -111,6 +111,8 @@ namespace shark_log
             g_log_notify.try_acquire_for(std::chrono::milliseconds(100));
             shark_log_loop_all_mng(file.get());
         }
+
+        shark_log_loop_all_mng(file.get());
     }
 
     void shark_log_initialize(log_file_factory* factor, std::string root)

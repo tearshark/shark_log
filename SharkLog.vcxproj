@@ -178,6 +178,7 @@
     <ClCompile Include="log_const.cpp" />
     <ClCompile Include="log_file.cpp" />
     <ClCompile Include="SharkLog.cpp" />
+    <ClCompile Include="test_ring_queue.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="log.h" />
@@ -187,6 +188,7 @@
     <ClInclude Include="log_info.h" />
     <ClInclude Include="log_serialize.h" />
     <ClInclude Include="log_type.h" />
+    <ClInclude Include="spsc_ring_queue.h" />
     <ClInclude Include="semaphore.h" />
   </ItemGroup>
   <ItemGroup>
