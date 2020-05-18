@@ -27,12 +27,12 @@ int main()
 {
 	static_assert(std::is_same_v<decltype(shark_decval(3, 8.0f, "Hello World!")), log_info<int, float, const char*>>, "");
 
-    shark_log_initialize(shark_log_stdfile_factory(), true, "C:/logs/mylog-{0:04d}{1:02d}{2:02d}-{3:02d}{4:02d}{5:02d}.{6}");
+    shark_log_initialize(shark_log_stdfile_factory(), false, "C:/logs/mylog-{0:04d}{1:02d}{2:02d}-{3:02d}{4:02d}{5:02d}.{6}");
     sharkl_info("this is a test for disassembly {} / {}", 1, 2.0);
 
     std::atomic<uint64_t> dt{ 0 };
 
-    const size_t K = 50;
+    const size_t K = 100;
     const size_t N = 200;
 
     for (int j = 0; j < K; ++j)
@@ -44,28 +44,28 @@ int main()
         {
             sharkl_info("this is a info");
             sharkl_info("this is a info with args {0}", 1.0);
-            sharkl_info("this is a info with args {0}, {1}", 2ll, 5.0);
+            sharkl_info("this is a info with args {0}, {1}", 211, 5.0);
             sharkl_info("this is a info with args {0}, {1}, {2}, {3}", 3, 8.0f, "foo", 10.0);
-            sharkl_info("this is a info with args {0}, {1}, {2}, {3}, {4}", 2ll, 3, 8.0f, "bar", 10.0);
+            sharkl_info("this is a info with args {0}, {1}, {2}, {3}, {4}", 54321, 3, 8.0f, "bar", 10.0);
 
             sharkl_warn("this is a warning");
             sharkl_warn("this is a warning with args {0}", 1.0);
-            sharkl_warn("this is a warning with args {0}, {1}", 2ll, 5.0);
+            sharkl_warn("this is a warning with args {0}, {1}", 211, 5.0);
             sharkl_warn("this is a warning with args {0}, {1}, {2}, {3}", 3, 8.0f, "foo", 10.0);
-            sharkl_warn("this is a warning with args {0}, {1}, {2}, {3}, {4}", 2ll, 3, 8.0f, "bar", 10.0);
+            sharkl_warn("this is a warning with args {0}, {1}, {2}, {3}, {4}", 54321, 3, 8.0f, "bar", 10.0);
 
             sharkl_eror("this is a error");
             sharkl_eror("this is a error with args {0}", 1.0);
-            sharkl_eror("this is a error with args {0}, {1}", 2ll, 5.0);
+            sharkl_eror("this is a error with args {0}, {1}", 211, 5.0);
             sharkl_eror("this is a error with args {0}, {1}, {2}, {3}", 3, 8.0f, "foo", 10.0);
-            sharkl_eror("this is a error with args {0}, {1}, {2}, {3}, {4}", 2ll, 3, 8.0f, "bar", 10.0);
+            sharkl_eror("this is a error with args {0}, {1}, {2}, {3}, {4}", 54321, 3, 8.0f, "bar", 10.0);
         }
 
         uint64_t t = _log_tick() - s.load(std::memory_order_acquire);
         dt.fetch_add(t);       //尽量不让编译器乱序
 
         shark_log_notify_format(nullptr);       //通知格式化线程有数据写入
-        std::this_thread::sleep_for(30ms);      //给格式化线程足够的时间落地，以便于取得更好的写入延迟。
+        std::this_thread::sleep_for(10ms);      //给格式化线程足够的时间落地，以便于取得更好的写入延迟。
     }
 
 	const uint64_t freq = _log_tick_freq();

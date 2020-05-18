@@ -20,10 +20,14 @@ namespace shark_log
         ::free(m_bufferPtr);
     }
 
+	extern __time64_t _log_tick_2_time(uint64_t tick);
+
     static inline void write_to_binary(log_info_base* log, log_file* file)
     {
 		const log_type* type = log->type;
-        if (file->write(&type->tid, sizeof(type->tid)) && file->write(&log->tick, sizeof(log->tick)))
+
+		__time64_t t64 = _log_tick_2_time(log->tick);
+        if (file->write(&type->tid, sizeof(type->tid)) && file->write(&t64, sizeof(t64)))
 		    type->serialize(log, file);
         else
             type->serialize(log, nullptr);      //阻止写入文件，但又需要清理数据
@@ -33,7 +37,20 @@ namespace shark_log
 	{
 		const log_type* type = log->type;
 
-		std::string text = fmt::format("{0}>{1}({2}): {3}:\r\n", log->tick, type->file, type->line, _log_level_string(type->level));
+		__time64_t t64 = _log_tick_2_time(log->tick);
+		__time64_t tus = t64 % 1000000;
+		t64 /= 1000000;
+
+		__time64_t tms = tus / 1000;
+		tus = tus % 1000;
+
+		struct tm tl;
+		localtime_s(&tl, &t64);
+
+		std::string text = fmt::format("{0:04d}-{1:02d}-{2:02d} {3:02d}:{4:02d}:{5:02d} {6:03d},{7:03d}>{8}({9}): {10}:\r\n",
+			tl.tm_year + 1900, tl.tm_mon + 1, tl.tm_mday, tl.tm_hour, tl.tm_min, tl.tm_sec, tms, tus,
+			type->file, type->line, _log_level_string(type->level));
+
         if (file->write(text.c_str(), text.size()))
         {
             type->formator(log, file);

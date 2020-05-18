@@ -9,6 +9,10 @@ namespace shark_log
 	int g_log_min_format_interval = 100;
     std::atomic<uint16_t> g_log_tid_counter{ 0 };
     
+	static __time64_t g_log_start_clock;    //Œ¢√Î
+    static uint64_t g_log_start_tick = 0;
+    static uint64_t g_log_tick_freq = 1000;
+
     static log_file_factory* g_log_factor = nullptr;
     static std::string g_log_root;
 
@@ -120,10 +124,20 @@ namespace shark_log
     void shark_log_initialize(log_file_factory* factor, bool binaryMode, std::string root)
     {
         assert(factor != nullptr);
+
+		g_log_start_clock = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) * 1000000;
+		g_log_start_tick = _log_tick();
+		g_log_tick_freq = _log_tick_freq();
+
         g_log_factor = factor;
         g_log_root = std::move(root);
 
         g_log_thread = std::thread(&shark_log_loop_format, binaryMode);
+    }
+
+    __time64_t _log_tick_2_time(uint64_t tick)
+    {
+        return g_log_start_clock + (tick - g_log_start_tick) / g_log_tick_freq;
     }
 
     void shark_log_destroy()
@@ -138,4 +152,6 @@ namespace shark_log
     {
         g_log_notify.release();
     }
+
+
 }
