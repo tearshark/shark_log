@@ -1,4 +1,3 @@
-#pragma once
 #include <stdint.h>
 #include <chrono>
 
@@ -11,7 +10,7 @@
 namespace shark_log
 {
     //Ã¿Î¢ÃëµÄtick
-	uint64_t _log_tick_freq()
+	uint64_t _log_tick_freq() noexcept
     {
         uint64_t stick = __rdtsc();
         auto sclock = std::chrono::high_resolution_clock::now();

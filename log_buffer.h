@@ -32,15 +32,19 @@ namespace shark_log
 		log_buffer& operator =(log_buffer&&) = delete;
 
 		template<log_level level, class... _Args>
-		auto try_push(const log_type& s_type, _Args&&... args) ->size_type;
+		size_type try_push(const log_type& s_type, _Args&&... args)
+#if _HAS_CXX17 || _HAS_CXX20 || __cplusplus >= 201703L
+			noexcept(std::is_nothrow_constructible_v<log_info<log_convert_t<_Args>...>, _Args...>)
+#endif
+			;
 
 		size_type consume_one(log_file* file, bool binaryMode);
 		size_type consume_all(log_file* file, bool binaryMode);
 
-		static size_type read_available(size_type write_index, size_type read_index, size_type max_size);
-		static size_type write_available(size_type write_index, size_type read_index, size_type max_size);
-		size_type read_available(size_type max_size) const;
-		size_type write_available(size_type max_size) const;
+		static size_type read_available(size_type write_index, size_type read_index, size_type max_size) noexcept;
+		static size_type write_available(size_type write_index, size_type read_index, size_type max_size) noexcept;
+		size_type read_available(size_type max_size) const noexcept;
+		size_type write_available(size_type max_size) const noexcept;
 		auto capacity() const noexcept ->size_type;
 	private:
 		value_type* m_bufferPtr;
@@ -65,7 +69,7 @@ namespace shark_log
 		return m_bufferSize;
 	}
 
-	inline log_buffer::size_type log_buffer::read_available(size_type write_index, size_type read_index, size_type max_size)
+	inline log_buffer::size_type log_buffer::read_available(size_type write_index, size_type read_index, size_type max_size) noexcept
 	{
 		if (write_index >= read_index)
 			return write_index - read_index;
@@ -73,7 +77,7 @@ namespace shark_log
 		return ret;
 	}
 
-	inline log_buffer::size_type log_buffer::write_available(size_type write_index, size_type read_index, size_type max_size)
+	inline log_buffer::size_type log_buffer::write_available(size_type write_index, size_type read_index, size_type max_size) noexcept
 	{
 		size_type ret = read_index - write_index - 1;
 		if (write_index >= read_index)
@@ -81,14 +85,14 @@ namespace shark_log
 		return ret;
 	}
 
-	inline log_buffer::size_type log_buffer::read_available(size_type max_size) const
+	inline log_buffer::size_type log_buffer::read_available(size_type max_size) const noexcept
 	{
 		size_type write_index = m_writeIndex.load(std::memory_order_acquire);
 		const size_type read_index = m_readIndex.load(std::memory_order_relaxed);
 		return read_available(write_index, read_index, max_size);
 	}
 
-	inline log_buffer::size_type log_buffer::write_available(size_type max_size) const
+	inline log_buffer::size_type log_buffer::write_available(size_type max_size) const noexcept
 	{
 		size_type write_index = m_writeIndex.load(std::memory_order_relaxed);
 		const size_type read_index = m_readIndex.load(std::memory_order_acquire);
@@ -96,7 +100,10 @@ namespace shark_log
 	}
 
 	template<log_level level, class... _Args>
-	inline auto log_buffer::try_push(const log_type& s_type, _Args&&... args) ->size_type
+	inline log_buffer::size_type log_buffer::try_push(const log_type& s_type, _Args&&... args)
+#if _HAS_CXX17 || _HAS_CXX20 || __cplusplus >= 201703L
+		noexcept(std::is_nothrow_constructible_v<log_info<log_convert_t<_Args>...>, _Args...>)
+#endif
 	{
 		using info_t = log_info<log_convert_t<_Args>...>;
 		static_assert(sizeof(info_t) <= _LOG_MAX_INFO, "Exceeded the maximum heads-up log limit");

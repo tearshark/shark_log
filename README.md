@@ -9,8 +9,14 @@
 将日志的数据拆分为两部分：<br>
 1、log_type：描述日志数据不变化的部分<br>
 
-    //void(void*)类型的格式化函数指针
-    log_formator* formator;
+    //bool(void*, log_file*)类型的格式化函数指针
+    log_method_formator* formator;
+
+    //bool(void*, log_file*)类型的以二进制形式序列化到文件的函数指针
+    log_method_serialize* serialize
+
+    //bool(log_type&, log_file&, log_file&)类型的转换二进制文件为文本文件的函数指针
+    log_method_translate* translate;
     
     //日志格式化的字符串，由于利用{fmt}来实现，故需要遵守{fmt}的语法规则
     const char* str;
@@ -20,6 +26,10 @@
 
     //产生本条日志的行号
     uint32_t line;
+
+    //本日志的类型编号，用于写入到二进制文件。
+    //之后可以利用tid找出来log_type，从而重新格式化为可阅读的文本日志。
+    uint16_t tid;
 
     //产生本条日志的日志等级
     log_level level;
@@ -37,6 +47,9 @@
 
     //本条日志的输入参数
     tuple<Args...> args;
+
+    //从二进制文件读入后的数据，跟args类型紧密相关
+    read_type = std::tuple<read_type_t<_Args>...>;
 
 使用方法：
 

@@ -16,20 +16,25 @@ namespace shark_log
     const size_t _LOG_CACHE_SIZE = 1024 * 1024;
 
     template<class _Ty>
-    constexpr size_t _log_align_idx() noexcept
+#if _HAS_CXX17 || _HAS_CXX20 || __cplusplus >= 201703L
+    constexpr
+#else
+    inline
+#endif
+    size_t _log_align_idx() noexcept
     {
         size_t idx = 0;
         for (; sizeof(_Ty) > ((size_t)_LOG_ALIGN_REQ << idx); ++idx);
         return idx;
     }
 
-    inline uint64_t _log_tick()
+    inline uint64_t _log_tick() noexcept
     {
         return __rdtsc();
     }
 
     //Ã¿Î¢ÃëµÄtick
-    extern uint64_t _log_tick_freq();
+    extern uint64_t _log_tick_freq() noexcept;
 
     enum struct log_level : uint8_t
     {
@@ -38,7 +43,12 @@ namespace shark_log
         eror,
     };
 
-    constexpr const char* _log_level_string(const log_level lvl)
+#if _HAS_CXX17 || _HAS_CXX20 || __cplusplus >= 201703L
+	constexpr
+#else
+	inline
+#endif
+	const char* _log_level_string(const log_level lvl) noexcept
     {
         switch (lvl)
         {
