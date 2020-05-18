@@ -7,8 +7,22 @@ using namespace std::chrono;
 using namespace std::literals;
 using namespace shark_log;
 
+//high_resolution_clock::now() : 45个时钟周期
+//_log_tick() : 0.7个时钟周期
+void test_tick_performace()
+{
+	uint64_t s = _log_tick();
+	for (int i = 0; i < 10000; ++i)
+		(void)high_resolution_clock::now();
+	uint64_t e = _log_tick();
+	uint64_t dt = e - s;
+	fmt::print("now() cost time: {0} CPU cycles", dt);
+}
+
 int main()
 {
+	const uint64_t freq = _log_tick_freq();
+
     shark_log_initialize(shark_log_stdfile_factory(), "C:/logs/mylog-{0:04d}{1:02d}{2:02d}-{3:02d}{4:02d}{5:02d}.bin");
 
     std::string hello = "Hello World!"s;
@@ -54,5 +68,5 @@ int main()
 
     shark_log_destroy();
 
-    fmt::print("\nlog cost time: {0} CPU cycles", dt.load() / (K * N * 15));
+    fmt::print("\nlog cost time: {0} ns", (dt.load() * 1000 / freq) / (K * N * 15));
 }

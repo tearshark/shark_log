@@ -27,6 +27,9 @@
     <ClCompile Include="log_file.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="log_const.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="log_buffer.h">

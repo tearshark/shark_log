@@ -25,7 +25,8 @@ namespace shark_log
         {
             using info_t = log_info<log_convert_t<_Args>...>;
 
-            log_buffer* logb = shark_log_local_buffer(_log_align_idx<info_t>());
+			log_buffer* logb = shark_log_local_buffer(_log_align_idx<info_t>());
+
             uint32_t count;
             if ((count = logb->try_push<level>(s_type, std::forward<_Args>(args)...)) == 0)
             {
@@ -43,11 +44,13 @@ namespace shark_log
                         goto push_success;
                 }
             }
-        push_success:
+        push_success:;
+/*
             if (count >= (logb->capacity() >> 1))
             {
                 shark_log_notify_format(logb);
             }
+*/
         }
     }
 

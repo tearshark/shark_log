@@ -175,6 +175,7 @@
   <ItemGroup>
     <ClCompile Include="log.cpp" />
     <ClCompile Include="log_buffer.cpp" />
+    <ClCompile Include="log_const.cpp" />
     <ClCompile Include="log_file.cpp" />
     <ClCompile Include="SharkLog.cpp" />
   </ItemGroup>

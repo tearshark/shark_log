@@ -28,11 +28,8 @@ namespace shark_log
         return __rdtsc();
     }
 
-	inline uint64_t _log_tick_freq()
-    {
-        uint32_t TSC_AUX;
-		return __rdtscp(&TSC_AUX);
-	}
+    //Ã¿Î¢ÃëµÄtick
+    extern uint64_t _log_tick_freq();
 
     enum struct log_level : uint8_t
     {
