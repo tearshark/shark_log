@@ -28,7 +28,7 @@ namespace shark_log
 		template<log_level level, class... _Args>
 		auto try_push(const log_type& s_type, _Args&&... args) ->size_type;
 
-		bool try_pop(log_file& file);
+		bool try_pop(log_file* file);
 	private:
 		char* m_bufferPtr;
 		size_type m_bufferSize;					//必须是2的幂次方

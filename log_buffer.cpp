@@ -22,7 +22,32 @@ namespace shark_log
         ::free(m_bufferPtr);
     }
 
-    bool log_buffer::try_pop(log_file& file)
+    static inline void write_to_binary(log_info_base* log, log_file* file)
+    {
+		const log_type* type = log->type;
+        if (file->write(&type->tid, sizeof(type->tid)) && file->write(&log->tick, sizeof(log->tick)))
+		    type->serialize(log, file);
+        else
+            type->serialize(log, nullptr);      //阻止写入文件，但又需要清理数据
+    }
+
+	static inline void write_to_text(log_info_base* log, log_file* file)
+	{
+		const log_type* type = log->type;
+
+		std::string text = fmt::format("{0}>{1}({2}): {3}:\r\n", log->tick, type->file, type->line, _log_level_string(type->level));
+        if (file->write(text.c_str(), text.size()))
+        {
+            type->formator(log, file);
+            file->write("\r\n", 2);
+        }
+        else
+        {
+            type->formator(log, nullptr);      //阻止写入文件，但又需要清理数据
+        }
+	}
+
+    bool log_buffer::try_pop(log_file* file)
     {
         auto currentReadIndex = m_readIndex.load(std::memory_order_acquire);
 
@@ -37,9 +62,7 @@ namespace shark_log
             const log_type* type = log->type;
             if (type)
             {
-                if (file.write(&type->tid, sizeof(type->tid)) && file.write(&log->tick, sizeof(log->tick)))
-                    type->serialize(log, file);
-
+                write_to_binary(log, file);
                 log->type = nullptr;
             }
 

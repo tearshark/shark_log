@@ -17,13 +17,14 @@ int main()
 
     sharkl_info("this is a test for disassembly {} / {}", 1, 2.0);
 
-    nanoseconds dt{0};
+    std::atomic<uint64_t> dt{ 0 };
 
     const size_t K = 1;
-    const size_t N = 500;
+    const size_t N = 1000;
     for (int j = 0; j < K; ++j)
     {
-        auto s = high_resolution_clock::now();
+        std::atomic<uint64_t> s;
+        s.store(_log_tick());       //æ°¡ø≤ª»√±‡“Î∆˜¬“–Ú
 
         for (int i = 0; i < N; ++i)
         {
@@ -46,12 +47,12 @@ int main()
             sharkl_eror("this is a error with args {0}, {1}, {2}, {3}, {4}", 2ll, 3, 8.0f, "bar", 10.0);
         }
 
-        dt += duration_cast<nanoseconds>(high_resolution_clock::now() - s);
+        dt.fetch_add(_log_tick() - s.load(std::memory_order_acquire));       //æ°¡ø≤ª»√±‡“Î∆˜¬“–Ú
 
         std::this_thread::sleep_for(10ms);
     }
 
     shark_log_destroy();
 
-    fmt::print("\nlog cost time: {0}ns", dt.count() / (K * N * 15));
+    fmt::print("\nlog cost time: {0} CPU cycles", dt.load() / (K * N * 15));
 }

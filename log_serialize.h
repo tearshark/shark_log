@@ -87,7 +87,7 @@ namespace shark_log
     template<class _Ty, class... _Rest>
     inline bool log_serialize_to_file(log_file& file, const _Ty& value, const _Rest&... rest)
     {
-        if (!typename log_serialize<_Ty>::write(value, file))
+        if (!log_serialize<_Ty>::write(value, file))
             return false;
         return log_serialize_to_file(file, rest...);
     }
@@ -108,7 +108,7 @@ namespace shark_log
     {
         using read_type = typename log_serialize<_Ty>::read_type;
         read_type value;
-        if (!typename log_serialize<_Ty>::read(value, file))
+        if (!log_serialize<_Ty>::read(value, file))
             throw std::logic_error("serialize failed");
         return value;
     }

@@ -59,7 +59,7 @@ namespace shark_log
             *prev = this->next;
         }
 
-        void try_pop_all(log_file& file)
+        void try_pop_all(log_file* file)
         {
             for (uint32_t i = 0; i < (uint32_t)buffers.size(); ++i)
             {
@@ -89,7 +89,7 @@ namespace shark_log
         return std::unique_ptr<log_file>(file);
     }
 
-    static void shark_log_loop_all_mng(log_file& file)
+    static void shark_log_loop_all_mng(log_file* file)
     {
         auto id = std::this_thread::get_id();
 
@@ -109,7 +109,7 @@ namespace shark_log
         for(;!g_log_exit;)
         {
             g_log_notify.try_acquire_for(std::chrono::milliseconds(100));
-            shark_log_loop_all_mng(*file);
+            shark_log_loop_all_mng(file.get());
         }
     }
 
@@ -132,6 +132,6 @@ namespace shark_log
     
     void shark_log_notify_format(log_buffer* logb)
     {
-        g_log_notify.release();
+        //g_log_notify.release();
     }
 }

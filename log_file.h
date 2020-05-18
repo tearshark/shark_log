@@ -1,12 +1,14 @@
 #pragma once
 #include <stdint.h>
 #include <string>
+/*
 #if __has_include(<concepts>)
 #include <concepts>
 #define SHARK_LOG_ENABLE_CONCEPT 0
 #else
+*/
 #define SHARK_LOG_ENABLE_CONCEPT 0
-#endif
+//#endif
 
 namespace shark_log
 {

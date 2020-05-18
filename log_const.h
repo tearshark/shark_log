@@ -1,6 +1,11 @@
 #pragma once
 #include <stdint.h>
+
+#ifdef _MSC_VER
 #include <intrin.h>
+#else
+#include <x86intrin.h>
+#endif
 
 namespace shark_log
 {
@@ -20,9 +25,14 @@ namespace shark_log
 
     inline uint64_t _log_tick()
     {
-        unsigned int tsc_aux;
-        return __rdtscp(&tsc_aux);
+        return __rdtsc();
     }
+
+	inline uint64_t _log_tick_freq()
+    {
+        uint32_t TSC_AUX;
+		return __rdtscp(&TSC_AUX);
+	}
 
     enum struct log_level : uint8_t
     {

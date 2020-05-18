@@ -7,8 +7,8 @@ namespace shark_log
 {
     struct log_type;
     
-    using log_method_formator = void(void*, log_file&);
-    using log_method_serialize = bool(void*, log_file&);
+    using log_method_formator = bool(void*, log_file*);
+    using log_method_serialize = bool(void*, log_file*);
     using log_method_translate = bool(log_type&, log_file&, log_file&);
 
     //描述日志数据不变化的部分

@@ -63,6 +63,7 @@ namespace std
 		semaphore(int initialCount = 0, int maxLong = (std::numeric_limits<int>::max)())
 		{
 			assert(initialCount >= 0);
+			assert(maxLong > 0);
 			//const long maxLong = 0x7fffffff;
 			m_hSema = CreateSemaphoreW(nullptr, initialCount, maxLong, nullptr);
 		}
