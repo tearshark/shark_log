@@ -6,6 +6,7 @@
 namespace shark_log
 {
     extern log_level g_log_level;
+    extern int g_log_min_format_interval;
     extern std::atomic<uint16_t> g_log_tid_counter;
 
     extern log_buffer* shark_log_local_buffer(size_t idx);
@@ -16,7 +17,11 @@ namespace shark_log
     //root : 格式化日志文件名的字符串，内部会提供创建的时间，用{fmt}格式化出文件名。
     //      如 "C:/logs/mylog-{0:04d}{1:02d}{2:02d}-{3:02d}{4:02d}{5:02d}.{6}"
     extern void shark_log_initialize(log_file_factory* factor, bool binaryMode, std::string root);
+    
+    //退出前确保日志完整落地，并销毁内部相关数据
     extern void shark_log_destroy();
+
+    //通知格式化线程有数据可以写入
     extern void shark_log_notify_format(log_buffer* logb);
 
     template<log_level level, class... _Args>

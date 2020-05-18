@@ -71,9 +71,9 @@ namespace shark_log
 	}
 
 	using size_type = log_buffer::size_type;
-	static void run_functor_and_delete(char* first, char* last, size_type chunkIndex, log_file* file, bool binaryMode)
+	static void run_functor_and_delete(char* first, char* last, size_type stride, log_file* file, bool binaryMode)
 	{
-		for (; first != last; first += (size_type)((size_type)1u << chunkIndex))
+		for (; first != last; first += stride)
 		{
 			log_info_base* log = reinterpret_cast<log_info_base*>(first);
 			const log_type* type = log->type;
@@ -98,6 +98,7 @@ namespace shark_log
 			return 0;
 
 		const size_type output_count = avail;
+		const size_type stride = (size_type)((size_type)1u << m_chunkIndex);
 
 		size_type new_read_index = read_index + output_count;
 
@@ -107,14 +108,14 @@ namespace shark_log
 			const size_type count0 = m_bufferSize - read_index;
 			const size_type count1 = output_count - count0;
 
-			run_functor_and_delete(m_bufferPtr + (read_index << m_chunkIndex), m_bufferPtr + (m_bufferSize << m_chunkIndex), m_chunkIndex, file, binaryMode);
-			run_functor_and_delete(m_bufferPtr, m_bufferPtr + (count1 << m_chunkIndex), m_chunkIndex, file, binaryMode);
+			run_functor_and_delete(m_bufferPtr + (read_index << m_chunkIndex), m_bufferPtr + (m_bufferSize << m_chunkIndex), stride, file, binaryMode);
+			run_functor_and_delete(m_bufferPtr, m_bufferPtr + (count1 << m_chunkIndex), stride, file, binaryMode);
 
 			new_read_index -= m_bufferSize;
 		}
 		else
 		{
-			run_functor_and_delete(m_bufferPtr + (read_index << m_chunkIndex), m_bufferPtr + ((read_index + output_count) << m_chunkIndex), m_chunkIndex, file, binaryMode);
+			run_functor_and_delete(m_bufferPtr + (read_index << m_chunkIndex), m_bufferPtr + ((read_index + output_count) << m_chunkIndex), stride, file, binaryMode);
 
 			if (new_read_index == m_bufferSize)
 				new_read_index = 0;

@@ -6,6 +6,7 @@
 namespace shark_log
 {
     log_level g_log_level = log_level::info;
+	int g_log_min_format_interval = 100;
     std::atomic<uint16_t> g_log_tid_counter{ 0 };
     
     static log_file_factory* g_log_factor = nullptr;
@@ -109,7 +110,7 @@ namespace shark_log
 
         for(;!g_log_exit;)
         {
-            g_log_notify.try_acquire_for(std::chrono::milliseconds(100));
+            g_log_notify.try_acquire_for(std::chrono::milliseconds(g_log_min_format_interval));   //每100ms强制落地一次数据
             shark_log_loop_all_mng(file.get(), binaryMode);
         }
 
