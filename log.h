@@ -12,9 +12,10 @@ namespace shark_log
 
     //初始化日志系统
     //factor : 创建文件的工厂
+    //binaryMode : 是否输出为二进制模式
     //root : 格式化日志文件名的字符串，内部会提供创建的时间，用{fmt}格式化出文件名。
-    //      如 "C:/log/mylog-{%04d}{%02d}{%02d}-{%02d}{%02d}{%02d}.txt"
-    extern void shark_log_initialize(log_file_factory* factor, std::string root);
+    //      如 "C:/logs/mylog-{0:04d}{1:02d}{2:02d}-{3:02d}{4:02d}{5:02d}.{6}"
+    extern void shark_log_initialize(log_file_factory* factor, bool binaryMode, std::string root);
     extern void shark_log_destroy();
     extern void shark_log_notify_format(log_buffer* logb);
 
@@ -45,12 +46,10 @@ namespace shark_log
                 }
             }
         push_success:;
-/*
-            if (count >= (logb->capacity() >> 1))
+            if (count >= (logb->capacity() >> 2))
             {
                 shark_log_notify_format(logb);
             }
-*/
         }
     }
 

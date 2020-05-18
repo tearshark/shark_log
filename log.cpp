@@ -59,12 +59,12 @@ namespace shark_log
             *prev = this->next;
         }
 
-        void try_pop_all(log_file* file)
+        void try_pop_all(log_file* file, bool binaryMode)
         {
             for (uint32_t i = 0; i < (uint32_t)buffers.size(); ++i)
             {
                 auto* logb = buffers[i].get();
-                logb->consume_all(file);
+                logb->consume_all(file, binaryMode);
             }
         }
     };
@@ -77,19 +77,20 @@ namespace shark_log
         return g_mng.buffers[idx].get();
     }
 
-    static std::unique_ptr<log_file> create_log_file(bool writeMode)
+    static std::unique_ptr<log_file> create_log_file(bool writeMode, bool binaryMode)
     {
         time_t t = time(nullptr);
         struct tm tmnow;
         localtime_s(&tmnow, &t);
 
-        std::string path = fmt::format(g_log_root, tmnow.tm_year + 1900, tmnow.tm_mon + 1, tmnow.tm_mday, tmnow.tm_hour, tmnow.tm_min, tmnow.tm_sec);
+        const char* ext = binaryMode ? "bin" : "txt";
+        std::string path = fmt::format(g_log_root, tmnow.tm_year + 1900, tmnow.tm_mon + 1, tmnow.tm_mday, tmnow.tm_hour, tmnow.tm_min, tmnow.tm_sec, ext);
         log_file* file = g_log_factor->create(path, writeMode);
 
         return std::unique_ptr<log_file>(file);
     }
 
-    static void shark_log_loop_all_mng(log_file* file)
+    static void shark_log_loop_all_mng(log_file* file, bool binaryMode)
     {
         auto id = std::this_thread::get_id();
 
@@ -98,30 +99,30 @@ namespace shark_log
         for (log_buffer_mng* mng = g_mng_first; mng != nullptr; mng = mng->next)
         {
             if (mng->id != id)
-                mng->try_pop_all(file);
+                mng->try_pop_all(file, binaryMode);
         }
     }
 
-    static void shark_log_loop_format()
+    static void shark_log_loop_format(bool binaryMode)
     {
-        auto file = create_log_file(true);
+        auto file = create_log_file(true, binaryMode);
 
         for(;!g_log_exit;)
         {
             g_log_notify.try_acquire_for(std::chrono::milliseconds(100));
-            shark_log_loop_all_mng(file.get());
+            shark_log_loop_all_mng(file.get(), binaryMode);
         }
 
-        shark_log_loop_all_mng(file.get());
+        shark_log_loop_all_mng(file.get(), binaryMode);
     }
 
-    void shark_log_initialize(log_file_factory* factor, std::string root)
+    void shark_log_initialize(log_file_factory* factor, bool binaryMode, std::string root)
     {
         assert(factor != nullptr);
         g_log_factor = factor;
         g_log_root = std::move(root);
 
-        g_log_thread = std::thread(&shark_log_loop_format);
+        g_log_thread = std::thread(&shark_log_loop_format, binaryMode);
     }
 
     void shark_log_destroy()
@@ -134,6 +135,6 @@ namespace shark_log
     
     void shark_log_notify_format(log_buffer* logb)
     {
-        //g_log_notify.release();
+        g_log_notify.release();
     }
 }

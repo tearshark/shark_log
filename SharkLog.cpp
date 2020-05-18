@@ -25,7 +25,7 @@ int main()
 {
 	const uint64_t freq = _log_tick_freq();
 
-    shark_log_initialize(shark_log_stdfile_factory(), "C:/logs/mylog-{0:04d}{1:02d}{2:02d}-{3:02d}{4:02d}{5:02d}.txt");
+    shark_log_initialize(shark_log_stdfile_factory(), true, "C:/logs/mylog-{0:04d}{1:02d}{2:02d}-{3:02d}{4:02d}{5:02d}.{6}");
 
     std::string hello = "Hello World!"s;
 
@@ -35,8 +35,8 @@ int main()
 
     std::atomic<uint64_t> dt{ 0 };
 
-    const size_t K = 1;
-    const size_t N = 100;
+    const size_t K = 50;
+    const size_t N = 200;
     for (int j = 0; j < K; ++j)
     {
         std::atomic<uint64_t> s;
@@ -65,7 +65,8 @@ int main()
 
         dt.fetch_add(_log_tick() - s.load(std::memory_order_acquire));       //æ°¡ø≤ª»√±‡“Î∆˜¬“–Ú
 
-        std::this_thread::sleep_for(10ms);
+        shark_log_notify_format(nullptr);
+        std::this_thread::sleep_for(20ms);
     }
 
     shark_log_destroy();

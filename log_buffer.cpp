@@ -45,7 +45,7 @@ namespace shark_log
         }
 	}
 
-	size_t log_buffer::consume_one(log_file* file)
+	size_t log_buffer::consume_one(log_file* file, bool binaryMode)
 	{
 		const size_type write_index = m_writeIndex.load(std::memory_order_acquire);
 		const size_type read_index = m_readIndex.load(std::memory_order_relaxed); // only written from pop thread
@@ -57,7 +57,10 @@ namespace shark_log
 		const log_type* type = log->type;
 		if (type)
 		{
-			write_to_text(log, file);
+			if (binaryMode)
+				write_to_binary(log, file);
+			else
+				write_to_text(log, file);
 			log->type = nullptr;
 		}
 
@@ -68,7 +71,7 @@ namespace shark_log
 	}
 
 	using size_type = log_buffer::size_type;
-	static void run_functor_and_delete(char* first, char* last, size_type chunkIndex, log_file* file)
+	static void run_functor_and_delete(char* first, char* last, size_type chunkIndex, log_file* file, bool binaryMode)
 	{
 		for (; first != last; first += (size_type)((size_type)1u << chunkIndex))
 		{
@@ -76,13 +79,16 @@ namespace shark_log
 			const log_type* type = log->type;
 			if (type)
 			{
-				write_to_text(log, file);
+				if (binaryMode)
+					write_to_binary(log, file);
+				else
+					write_to_text(log, file);
 				log->type = nullptr;
 			}
 		}
 	}
 
-	size_type log_buffer::consume_all(log_file* file)
+	size_type log_buffer::consume_all(log_file* file, bool binaryMode)
 	{
 		const size_type write_index = m_writeIndex.load(std::memory_order_acquire);
 		const size_type read_index = m_readIndex.load(std::memory_order_relaxed); // only written from pop thread
@@ -101,14 +107,14 @@ namespace shark_log
 			const size_type count0 = m_bufferSize - read_index;
 			const size_type count1 = output_count - count0;
 
-			run_functor_and_delete(m_bufferPtr + (read_index << m_chunkIndex), m_bufferPtr + (m_bufferSize << m_chunkIndex), m_chunkIndex, file);
-			run_functor_and_delete(m_bufferPtr, m_bufferPtr + (count1 << m_chunkIndex), m_chunkIndex, file);
+			run_functor_and_delete(m_bufferPtr + (read_index << m_chunkIndex), m_bufferPtr + (m_bufferSize << m_chunkIndex), m_chunkIndex, file, binaryMode);
+			run_functor_and_delete(m_bufferPtr, m_bufferPtr + (count1 << m_chunkIndex), m_chunkIndex, file, binaryMode);
 
 			new_read_index -= m_bufferSize;
 		}
 		else
 		{
-			run_functor_and_delete(m_bufferPtr + (read_index << m_chunkIndex), m_bufferPtr + ((read_index + output_count) << m_chunkIndex), m_chunkIndex, file);
+			run_functor_and_delete(m_bufferPtr + (read_index << m_chunkIndex), m_bufferPtr + ((read_index + output_count) << m_chunkIndex), m_chunkIndex, file, binaryMode);
 
 			if (new_read_index == m_bufferSize)
 				new_read_index = 0;

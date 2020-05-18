@@ -34,8 +34,8 @@ namespace shark_log
 		template<log_level level, class... _Args>
 		auto try_push(const log_type& s_type, _Args&&... args) ->size_type;
 
-		size_type consume_one(log_file* file);
-		size_type consume_all(log_file* file);
+		size_type consume_one(log_file* file, bool binaryMode);
+		size_type consume_all(log_file* file, bool binaryMode);
 
 		static size_type read_available(size_type write_index, size_type read_index, size_type max_size);
 		static size_type write_available(size_type write_index, size_type read_index, size_type max_size);
@@ -112,6 +112,6 @@ namespace shark_log
 
 		m_writeIndex.store(next, std::memory_order_release);
 
-		return read_available(write_index, next, m_bufferSize);
+		return read_available(next, m_readIndex.load(std::memory_order_acquire), m_bufferSize);
 	}
 }
