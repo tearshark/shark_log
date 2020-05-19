@@ -67,25 +67,25 @@ Measured in nanoseconds and each cell represents the 50th / 99.9th tail latencie
 
 | Message | shark_log | NanoLog | spdlog | Log4j2 | glog | Boost | ETW |
 |---------|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|:--------:|
-|staticString | 19/25| 7/37| 214/2546| 174/3364 | 1198/5968| 1764/3772| 161/2967|
-|stringConcat | 19/28| 7/36| 279/905| 256/25087 | 1212/5881| 1829/5548| 191/3365|
-|singleInteger | 18/24| 7/32| 268/855| 180/9305 | 1242/5482| 1914/5759| 167/3007|
-|twoIntegers | 19/24| 8/62| 437/1416| 183/10896 | 1399/6100| 2333/7235| 177/3183|
-|singleDouble | 19/23| 8/43| 585/1562| 175/4351 | 1983/6957| 2610/7079| 165/3182|
-|complexFormat | 19/24| 8/40| 1776/5267| 202/18207 | 2569/8877| 3334/11038| 218/3426|
+|staticString | 58/1798| 7/37| 214/2546| 174/3364 | 1198/5968| 1764/3772| 161/2967|
+|stringConcat | 58/2038| 7/36| 279/905| 256/25087 | 1212/5881| 1829/5548| 191/3365|
+|singleInteger | 58/1856| 7/32| 268/855| 180/9305 | 1242/5482| 1914/5759| 167/3007|
+|twoIntegers | 58/1866| 8/62| 437/1416| 183/10896 | 1399/6100| 2333/7235| 177/3183|
+|singleDouble | 58/1870| 8/43| 585/1562| 175/4351 | 1983/6957| 2610/7079| 165/3182|
+|complexFormat | 60/3168| 8/40| 1776/5267| 202/18207 | 2569/8877| 3334/11038| 218/3426|
 
 #### Log Messages Map
 
-Log messages used in the benchmarks above. *Italics* indicate dynamic log arguments.
+Log messages used in the benchmarks above. **Bold** indicate dynamic log arguments.
 
 | Message ID | Log Message Used |
 |--------------|:--------|
 |staticString  | Starting backup replica garbage collector thread |
-|singleInteger | Backup storage speeds (min): *181* MB/s read |
-|twoIntegers   | buffer has consumed *1032024* bytes of extra storage, current allocation: *1016544* bytes |
-|singleDouble  | Using tombstone ratio balancer with ratio = *0.4* |
-|complexFormat | Initialized InfUdDriver buffers: *50000* receive buffers (*97* MB), *50* transmit buffers (*0* MB), took *26.2* ms |
-|stringConcat  | Opened session with coordinator at *basic+udp:host=192.168.1.140,port=12246* |
+|singleInteger | Backup storage speeds (min): **181** MB/s read |
+|twoIntegers   | buffer has consumed **1032024** bytes of extra storage, current allocation: **1016544** bytes |
+|singleDouble  | Using tombstone ratio balancer with ratio = **0.4** |
+|complexFormat | Initialized InfUdDriver buffers: **50000** receive buffers (**97** MB), **50** transmit buffers (**0** MB), took **26.2** ms |
+|stringConcat  | Opened session with coordinator at **basic+udp:host=192.168.1.140,port=12246** |
 
 
 这是一个心血来潮玩具级别的实现。接受批评指点交流，不接受嘲讽。<br>

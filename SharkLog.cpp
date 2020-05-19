@@ -27,31 +27,38 @@ template<class _Callback>
 void benchmark_log_callback(const uint64_t freq, const char * name, const _Callback& cb)
 {
     const size_t K = 50;
-    const size_t N = 2000;
+    const size_t N = 200;
+
+    std::vector<uint64_t> ticks;
+    ticks.reserve(K);
 
     std::atomic<uint64_t> total{ 0 }, mintick{ (std::numeric_limits<uint64_t>::max)() }, stick;
 
     for (int j = 0; j < K; ++j)
     {
+        //不能每一条日志进行统计，会导致性能严重降低，低到无法反应真实状态
+		stick.store(__rdtsc());
         for (int i = 0; i < N; ++i)
         {
-            stick.store(__rdtsc());
-
             cb();
-
-            uint64_t dt = __rdtsc() - stick.load();
-
-            total += dt;
-            mintick.store((std::min)(mintick.load(), dt));
         }
+		uint64_t dt = __rdtsc() - stick.load();
 
-        shark_log_notify_format(nullptr);       //通知格式化线程有数据写入
-        std::this_thread::sleep_for(10ms);      //给格式化线程足够的时间落地，以便于取得更好的写入延迟。
+		total += dt;
+		mintick.store((std::min)(mintick.load(), dt));
+		ticks.push_back(dt);
+
+        shark_log_notify_format(nullptr);
+		std::this_thread::sleep_for(10ms);
     }
 
+    std::sort(ticks.begin(), ticks.end());
+    auto media = ticks[K / 2] / N;
+    auto v999 = ticks[K * 999 / 1000] / N;
+
     auto avg = (total * 1000 / freq) / (K * N);
-    mintick = mintick * 1000 / freq;
-    fmt::print("{0} cost time: min={1} ns, avg={2} ns.\r\n", name, mintick, avg);
+    mintick = mintick * 1000 / freq / N;
+    fmt::print("{0} cost time: min={1} ns, avg={2} ns. v50.0={3} ns, v99.9={4}\r\n", name, mintick, avg, media, v999);
 
     std::this_thread::sleep_for(200ms);
 }
@@ -62,13 +69,11 @@ void benchmark_log()
 
     benchmark_log_callback(freq, "staticString", []
         {
-        sharkl_info("Starting backup replica garbage collector thread"); 
+        sharkl_info("Starting backup replica garbage collector thread");
         });
-
-    benchmark_log_callback(freq, "staticString", []
-        {
-            sharkl_info("Starting backup replica garbage collector thread");
-        });
+	benchmark_log_callback(freq, "stringConcat", [] {
+		sharkl_info("Opened session with coordinator at {}", "basic+udp:host=192.168.1.140,port=12246");
+	    });
     benchmark_log_callback(freq, "singleInteger", [] {
         sharkl_info("Backup storage speeds (min): {} MB/s read", 181);
         });
@@ -80,9 +85,6 @@ void benchmark_log()
         });
     benchmark_log_callback(freq, "complexFormat", [] {
         sharkl_info("Initialized InfUdDriver buffers: {} receive buffers ({} MB), {} transmit buffers ({} MB), took {} ms", 50000, 97, 50, 0, 26.2f); 
-        });
-    benchmark_log_callback(freq, "stringConcat", [] {
-        sharkl_info("Opened session with coordinator at basic+udp:host={}, port={}", "192.168.1.140", 12246);
         });
 }
 
