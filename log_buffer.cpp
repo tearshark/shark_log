@@ -62,6 +62,23 @@ namespace shark_log
         }
 	}
 
+	static inline void write_to_text_tick(log_info_base* log, log_file* file)
+	{
+		const log_type* type = log->type;
+		std::string text = fmt::format("{0}>{1}({2}): {3}:\r\n",
+			log->tick, type->file, type->line, _log_level_string(type->level));
+
+		if (file->write(text.c_str(), text.size()))
+		{
+			type->formator(log, file);
+			file->write("\r\n", 2);
+		}
+		else
+		{
+			type->formator(log, nullptr);      //阻止写入文件，但又需要清理数据
+		}
+	}
+
 	size_t log_buffer::consume_one(log_file* file, bool binaryMode)
 	{
 		const size_type write_index = m_writeIndex.load(std::memory_order_acquire);
@@ -77,7 +94,7 @@ namespace shark_log
 			if (binaryMode)
 				write_to_binary(log, file);
 			else
-				write_to_text(log, file);
+				write_to_text_tick(log, file);
 			log->type = nullptr;
 		}
 
@@ -99,7 +116,7 @@ namespace shark_log
 				if (binaryMode)
 					write_to_binary(log, file);
 				else
-					write_to_text(log, file);
+					write_to_text_tick(log, file);
 				log->type = nullptr;
 			}
 		}

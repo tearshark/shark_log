@@ -52,6 +52,7 @@ namespace shark_log
 		size_t read_available(size_t max_size) const;
 		size_t write_available(size_t max_size) const;
 		auto capacity() const noexcept ->size_type;
+		bool empty() const noexcept;
 	private:
 		value_type* m_bufferPtr;
 		size_type m_bufferSize;					//必须是2的幂次方
@@ -84,6 +85,12 @@ namespace shark_log
 	inline auto spsc_ring_queue<_Ty>::capacity() const noexcept->size_type
 	{
 		return m_bufferSize;
+	}
+
+	template<class _Ty>
+	inline bool spsc_ring_queue<_Ty>::empty() const noexcept
+	{
+		return read_available(m_bufferSize) == 0;
 	}
 
 	template<class _Ty>

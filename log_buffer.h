@@ -46,6 +46,7 @@ namespace shark_log
 		size_type read_available(size_type max_size) const noexcept;
 		size_type write_available(size_type max_size) const noexcept;
 		auto capacity() const noexcept ->size_type;
+		inline bool empty() const noexcept;
 	private:
 		value_type* m_bufferPtr;
 		size_type m_bufferSize;					//必须是2的幂次方
@@ -67,6 +68,11 @@ namespace shark_log
 	inline auto log_buffer::capacity() const noexcept->size_type
 	{
 		return m_bufferSize;
+	}
+
+	inline bool log_buffer::empty() const noexcept
+	{
+		return read_available(m_bufferSize) == 0;
 	}
 
 	inline log_buffer::size_type log_buffer::read_available(size_type write_index, size_type read_index, size_type max_size) noexcept

@@ -51,10 +51,10 @@ namespace shark_log
                 }
             }
         push_success:;
-            if (count >= (logb->capacity() >> 2))
-            {
-                shark_log_notify_format(logb);
-            }
+            //if (count >= (logb->capacity() >> 2))
+            //{
+            //    shark_log_notify_format(logb);
+            //}
         }
     }
 

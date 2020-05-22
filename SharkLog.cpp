@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <chrono>
 #include <vector>
 #include <algorithm>
@@ -23,68 +24,123 @@ void test_tick_performace()
 	fmt::print("now() cost time: {0} CPU cycles", dt);
 }
 
-template<class _Callback>
-void benchmark_log_callback(const uint64_t freq, const char * name, const _Callback& cb)
+void benchmark_parse_result(const char* name, const char* path)
 {
-    const size_t K = 50;
-    const size_t N = 200;
-
-    std::vector<uint64_t> ticks;
-    ticks.reserve(K);
-
-    std::atomic<uint64_t> total{ 0 }, mintick{ (std::numeric_limits<uint64_t>::max)() }, stick;
-
-    for (int j = 0; j < K; ++j)
+    std::ifstream ifs(path, std::ios::in);
+    if (!ifs.is_open())
     {
-        //不能每一条日志进行统计，会导致性能严重降低，低到无法反应真实状态
-		stick.store(__rdtsc());
-        for (int i = 0; i < N; ++i)
-        {
-            cb();
-        }
-		uint64_t dt = __rdtsc() - stick.load();
-
-		total += dt;
-		mintick.store((std::min)(mintick.load(), dt));
-		ticks.push_back(dt);
-
-        shark_log_notify_format(nullptr);
-		std::this_thread::sleep_for(10ms);
+        fmt::print("open file '{}' failed.", path);
+        return;
     }
 
-    std::sort(ticks.begin(), ticks.end());
-    auto media = ticks[K / 2] / N;
-    auto v999 = ticks[K * 999 / 1000] / N;
+    std::vector<uint64_t> ticks;
+    ticks.reserve(20000);
 
-    auto avg = (total * 1000 / freq) / (K * N);
-    mintick = mintick * 1000 / freq / N;
-    fmt::print("{0} cost time: min={1} ns, avg={2} ns. v50.0={3} ns, v99.9={4}\r\n", name, mintick, avg, media, v999);
+    std::string str;
+    while (!ifs.eof())
+    {
+        std::getline(ifs, str);
+        if (str.empty())
+            break;
 
-    std::this_thread::sleep_for(200ms);
+        uint64_t t = std::strtoull(str.c_str(), nullptr, 10);
+        std::getline(ifs, str);
+
+        ticks.push_back(t);
+    }
+
+    if (ticks.size() > 100)
+    {
+        std::sort(ticks.begin(), ticks.end());
+
+        uint64_t mintick = (std::numeric_limits<uint64_t>::max)(), total = 0;
+
+        uint64_t start = ticks.front();
+        ticks.front() = 0;
+
+        for(auto iter = ticks.begin() + 1; iter != ticks.end(); ++iter)
+        {
+            auto& t = *iter;
+            auto tmp = t;
+            t -= start;
+            start = tmp;
+
+            mintick = (std::min)(mintick, t);
+            total += t;
+        }
+        std::sort(ticks.begin(), ticks.end());
+
+        const uint64_t freq = _log_tick_freq();
+
+        uint64_t avg = total / (ticks.size() - 1);
+        uint64_t th50 = ticks[ticks.size() / 2];
+        uint64_t th999 = ticks[ticks.size() * 999 / 1000];
+
+        fmt::print("'{}' cost time: min={} ns, avg={} ns, 50.0th={} ns, 99.9th={} ns\r\n", 
+            name, 
+            mintick * 1000 / freq, 
+            avg * 1000 / freq, 
+            th50 * 1000 / freq, 
+            th999 * 1000 / freq);
+    }
+}
+template<class _Callback>
+void benchmark_log_callback(const char* name, const _Callback& cb)
+{
+    const char* path = "C:/logs/mylog-bench.txt";
+    ::DeleteFileA(path);
+    shark_log_initialize(shark_log_stdfile_factory(), false, path);
+
+    const size_t TN = 1;
+    std::thread log_thread[TN];
+    for (size_t i = 0; i < TN; ++i)
+    {
+        log_thread[i] = std::thread([cb]
+        {
+            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+            SetThreadAffinityMask(GetCurrentThread(), 2);
+                
+            const size_t N = 50000;
+            for (int i = 0; i < N; ++i)
+            {
+                cb();
+            }
+
+            shark_log_notify_format(nullptr);
+        });
+    }
+
+    for (size_t i = 0; i < TN; ++i)
+        log_thread[i].join();
+
+    std::this_thread::sleep_for(1000ms);
+    shark_log_destroy();
+
+    benchmark_parse_result(name, path);
+
+    std::this_thread::sleep_for(100ms);
 }
 
 void benchmark_log()
 {
-    const uint64_t freq = _log_tick_freq();
-
-    benchmark_log_callback(freq, "staticString", []
+    benchmark_log_callback("staticString", []
         {
         sharkl_info("Starting backup replica garbage collector thread");
         });
-	benchmark_log_callback(freq, "stringConcat", [] {
-		sharkl_info("Opened session with coordinator at {}", "basic+udp:host=192.168.1.140,port=12246");
-	    });
-    benchmark_log_callback(freq, "singleInteger", [] {
+    benchmark_log_callback("stringConcat", [] {
+        sharkl_info("Opened session with coordinator at {}", "basic+udp:host=192.168.1.140,port=12246");
+        });
+    benchmark_log_callback("singleInteger", [] {
         sharkl_info("Backup storage speeds (min): {} MB/s read", 181);
         });
-    benchmark_log_callback(freq, "twoIntegers", [] {
-        sharkl_info("buffer has consumed {} bytes of extra storage, current allocation: {} bytes", 1032024, 1016544); 
+    benchmark_log_callback("twoIntegers", [] {
+        sharkl_info("buffer has consumed {} bytes of extra storage, current allocation: {} bytes", 1032024, 1016544);
         });
-    benchmark_log_callback(freq, "singleDouble", [] {
-        sharkl_info("Using tombstone ratio balancer with ratio = {}", 0.4); 
+    benchmark_log_callback("singleDouble", [] {
+        sharkl_info("Using tombstone ratio balancer with ratio = {}", 0.4);
         });
-    benchmark_log_callback(freq, "complexFormat", [] {
-        sharkl_info("Initialized InfUdDriver buffers: {} receive buffers ({} MB), {} transmit buffers ({} MB), took {} ms", 50000, 97, 50, 0, 26.2f); 
+    benchmark_log_callback("complexFormat", [] {
+        sharkl_info("Initialized InfUdDriver buffers: {} receive buffers ({} MB), {} transmit buffers ({} MB), took {} ms", 50000, 97, 50, 0, 26.2f);
         });
 }
 
@@ -133,13 +189,14 @@ void test_log()
     fmt::print("\nlog cost avg time: {0} ns.", avg);
 }
 
-int main()
+int main(int argc, const char* argv[])
 {
 	static_assert(std::is_same_v<decltype(shark_decval(3, 8.0f, "Hello World!")), log_info<int, float, const char*>>, "");
 
-    shark_log_initialize(shark_log_stdfile_factory(), true, "C:/logs/mylog-{0:04d}{1:02d}{2:02d}-{3:02d}{4:02d}{5:02d}.{6}");
-    sharkl_info("this is a test for disassembly {} / {}", 1, 2.0);
-
     benchmark_log();
-	shark_log_destroy();
+
+    //shark_log_initialize(shark_log_stdfile_factory(), false, "C:/logs/mylog-bench.txt");
+    //sharkl_info("this is a test for disassembly {} / {}", 1, 2.0);
+
+	//shark_log_destroy();
 }

@@ -1,3 +1,4 @@
+#include <iostream>
 #include <array>
 #include <mutex>
 #include "semaphore.h"
@@ -6,7 +7,7 @@
 namespace shark_log
 {
     log_level g_log_level = log_level::info;
-	int g_log_min_format_interval = 100;
+	int g_log_min_format_interval = 20;
     std::atomic<uint16_t> g_log_tid_counter{ 0 };
     
 	static __time64_t g_log_start_clock;    //微秒
@@ -57,6 +58,26 @@ namespace shark_log
 
         ~log_buffer_mng() noexcept(false)
         {
+            for (;;)
+            {
+                bool all_empty = true;
+                for (uint32_t i = 0; i < (uint32_t)buffers.size(); ++i)
+                {
+                    auto* logb = buffers[i].get();
+                    all_empty &= logb->empty();
+                }
+
+                if (!all_empty)
+                {
+                    g_log_notify.release();
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                }
+                else
+                {
+                    break;
+                }
+            }
+
             std::unique_lock<std::mutex> lck(g_mng_mutex);
 
             if (next)
@@ -91,6 +112,8 @@ namespace shark_log
         const char* ext = binaryMode ? "bin" : "txt";
         std::string path = fmt::format(g_log_root, tmnow.tm_year + 1900, tmnow.tm_mon + 1, tmnow.tm_mday, tmnow.tm_hour, tmnow.tm_min, tmnow.tm_sec, ext);
         log_file* file = g_log_factor->create(path, writeMode);
+        if (file == nullptr)
+            fmt::print("open file '{}' failed.", path);
 
         return std::unique_ptr<log_file>(file);
     }
@@ -110,20 +133,30 @@ namespace shark_log
 
     static void shark_log_loop_format(bool binaryMode)
     {
-        auto file = create_log_file(true, binaryMode);
-
-        for(;!g_log_exit;)
+        try
         {
-            g_log_notify.try_acquire_for(std::chrono::milliseconds(g_log_min_format_interval));   //每100ms强制落地一次数据
+            auto file = create_log_file(true, binaryMode);
+
+            for (; !g_log_exit;)
+            {
+                g_log_notify.try_acquire_for(std::chrono::milliseconds(g_log_min_format_interval));   //每100ms强制落地一次数据
+                //if (!g_log_notify.acquire())
+                //    break;
+                shark_log_loop_all_mng(file.get(), binaryMode);
+            }
+
             shark_log_loop_all_mng(file.get(), binaryMode);
         }
-
-        shark_log_loop_all_mng(file.get(), binaryMode);
+        catch (std::exception& e)
+        {
+            std::cout << e.what() << std::endl;
+        }
     }
 
     void shark_log_initialize(log_file_factory* factor, bool binaryMode, std::string root)
     {
         assert(factor != nullptr);
+        g_log_exit = false;
 
 		g_log_start_clock = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) * 1000000;
 		g_log_start_tick = _log_tick();
