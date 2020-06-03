@@ -85,7 +85,7 @@ namespace shark_log
             *prev = this->next;
         }
 
-        void try_pop_all(log_file* file, bool binaryMode)
+        void try_consume_all(log_file* file, bool binaryMode)
         {
             for (uint32_t i = 0; i < (uint32_t)buffers.size(); ++i)
             {
@@ -127,7 +127,7 @@ namespace shark_log
         for (log_buffer_mng* mng = g_mng_first; mng != nullptr; mng = mng->next)
         {
             if (mng->id != id)
-                mng->try_pop_all(file, binaryMode);
+                mng->try_consume_all(file, binaryMode);
         }
     }
 
