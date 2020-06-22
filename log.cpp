@@ -6,8 +6,30 @@
 
 namespace shark_log
 {
+    struct loop_semaphore
+    {
+        std::atomic<intptr_t> _counter = 0;
+        void release()
+        {
+            _counter.fetch_add(1, std::memory_order_acq_rel);
+        }
+        bool acquire()
+        {
+            for(;;)
+            {
+                intptr_t cnt = _counter.load(std::memory_order_relaxed);
+                if (cnt > 0)
+                {
+                    if (_counter.compare_exchange_weak(cnt, cnt - 1))
+                        break;
+                }
+            }
+            return true;
+        }
+    };
+
     log_level g_log_level = log_level::info;
-	int g_log_min_format_interval = 20;
+	int g_log_min_format_interval = 0;
     std::atomic<uint16_t> g_log_tid_counter{ 0 };
     
 	static __time64_t g_log_start_clock;    //Œ¢√Î
@@ -20,6 +42,7 @@ namespace shark_log
     static volatile bool g_log_exit = false;
     static std::thread g_log_thread;
     static std::semaphore g_log_notify;
+    //static loop_semaphore g_log_notify;
 
     struct log_buffer_mng;
 
@@ -133,6 +156,9 @@ namespace shark_log
 
     static void shark_log_loop_format(bool binaryMode)
     {
+		//SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+		//SetThreadAffinityMask(GetCurrentThread(), 1);
+
         try
         {
             auto file = create_log_file(true, binaryMode);

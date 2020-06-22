@@ -75,13 +75,15 @@ void benchmark_parse_result(const char* name, const char* path)
         uint64_t avg = total / (ticks.size() - 1);
         uint64_t th50 = ticks[ticks.size() / 2];
         uint64_t th999 = ticks[ticks.size() * 999 / 1000];
+		uint64_t last = ticks.back();
 
-        fmt::print("'{}' cost time: min={} ns, avg={} ns, 50.0th={} ns, 99.9th={} ns\r\n", 
+        fmt::print("'{}' cost time: min={} ns, avg={} ns, 50.0th={} ns, 99.9th={} ns, last={} ns\r\n", 
             name, 
             mintick * 1000 / freq, 
             avg * 1000 / freq, 
             th50 * 1000 / freq, 
-            th999 * 1000 / freq);
+            th999 * 1000 / freq,
+            last * 1000/ freq);
     }
 }
 template<class _Callback>
