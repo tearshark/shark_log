@@ -93,7 +93,7 @@ void benchmark_log_callback(const char* name, const _Callback& cb)
     ::DeleteFileA(path);
     shark_log_initialize(shark_log_stdfile_factory(), false, path);
 
-    const size_t TN = 1;
+    const size_t TN = 11;
     std::thread log_thread[TN];
     for (size_t i = 0; i < TN; ++i)
     {

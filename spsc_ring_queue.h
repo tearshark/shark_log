@@ -39,7 +39,8 @@ namespace shark_log
 		spsc_ring_queue& operator =(const spsc_ring_queue&) = delete;
 		spsc_ring_queue& operator =(spsc_ring_queue&&) = delete;
 
-		bool try_push(value_type value);
+        template<class... _Args>
+        bool try_push(_Args&&... args);
 		bool try_pop(value_type& value);
 
 		template <typename Functor>
@@ -47,12 +48,11 @@ namespace shark_log
 		template <typename Functor>
 		size_t consume_all(Functor const& functor);
 
-		static size_t read_available(size_t write_index, size_t read_index, size_t max_size);
-		static size_t write_available(size_t write_index, size_t read_index, size_t max_size);
-		size_t read_available(size_t max_size) const;
-		size_t write_available(size_t max_size) const;
+        auto size() const noexcept->size_type;
+        auto stride() const noexcept->size_type;
 		auto capacity() const noexcept ->size_type;
 		bool empty() const noexcept;
+        bool full() const noexcept;
 	private:
 		value_type* m_bufferPtr;
 		size_type m_bufferSize;					//必须是2的幂次方
@@ -61,6 +61,11 @@ namespace shark_log
 		std::atomic<size_type> m_writeIndex;
 		char padding1[padding_size]; /* force read_index and write_index to different cache lines */
 		std::atomic<size_type> m_readIndex;
+
+        static size_t read_available(size_t write_index, size_t read_index, size_t max_size);
+        static size_t write_available(size_t write_index, size_t read_index, size_t max_size);
+        size_t read_available(size_t max_size) const;
+        size_t write_available(size_t max_size) const;
 
 		auto nextIndex(size_type a_count) const noexcept->size_type;
 
@@ -81,6 +86,18 @@ namespace shark_log
 		return static_cast<size_type>((a_count + 1) & (m_bufferSize - 1));
 	}
 
+    template<class _Ty>
+	inline auto spsc_ring_queue<_Ty>::size() const noexcept->size_type
+	{
+        return read_available(m_bufferSize);
+	}
+    
+    template<class _Ty>
+	auto spsc_ring_queue<_Ty>::stride() const noexcept->size_type
+	{
+		return sizeof(_Ty);
+	}
+
 	template<class _Ty>
 	inline auto spsc_ring_queue<_Ty>::capacity() const noexcept->size_type
 	{
@@ -91,6 +108,12 @@ namespace shark_log
 	inline bool spsc_ring_queue<_Ty>::empty() const noexcept
 	{
 		return read_available(m_bufferSize) == 0;
+	}
+
+    template<class _Ty>
+	inline bool spsc_ring_queue<_Ty>::full() const noexcept
+	{
+		return write_available(m_bufferSize) == 0;
 	}
 
 	template<class _Ty>
@@ -128,14 +151,15 @@ namespace shark_log
 	}
 
 	template<class _Ty>
-	inline bool spsc_ring_queue<_Ty>::try_push(value_type value)
+    template<class... _Args>
+	inline bool spsc_ring_queue<_Ty>::try_push(_Args&&... args)
 	{
 		const auto write_index = m_writeIndex.load(std::memory_order_acquire);
 		const auto next = nextIndex(write_index);
 		if (next == m_readIndex.load(std::memory_order_acquire))
 			return false;
 
-		new(m_bufferPtr + write_index) value_type(value);
+		new(m_bufferPtr + write_index) value_type(std::forward<_Args>(args)...);
 
 		m_writeIndex.store(next, std::memory_order_release);
 
