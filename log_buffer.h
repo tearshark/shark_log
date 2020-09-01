@@ -31,7 +31,7 @@ namespace shark_log
 		log_buffer& operator =(const log_buffer&) = delete;
 		log_buffer& operator =(log_buffer&&) = delete;
 
-		template<log_level level, class... _Args>
+		template<class... _Args>
 		size_type try_push(const log_type& s_type, _Args&&... args)
 #if _HAS_CXX17 || _HAS_CXX20 || __cplusplus >= 201703L
 			noexcept(std::is_nothrow_constructible_v<log_info<log_convert_t<_Args>...>, _Args...>)
@@ -105,7 +105,7 @@ namespace shark_log
 		return write_available(write_index, read_index, max_size);
 	}
 
-	template<log_level level, class... _Args>
+	template<class... _Args>
 	inline log_buffer::size_type log_buffer::try_push(const log_type& s_type, _Args&&... args)
 #if _HAS_CXX17 || _HAS_CXX20 || __cplusplus >= 201703L
 		noexcept(std::is_nothrow_constructible_v<log_info<log_convert_t<_Args>...>, _Args...>)
