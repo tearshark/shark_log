@@ -34,19 +34,19 @@ namespace shark_log
 			log_buffer* logb = shark_log_local_buffer(_log_align_idx<info_t>());
 
             size_t count;
-            if ((count = logb->try_push<level>(s_type, std::forward<_Args>(args)...)) == 0)
+            if ((count = logb->try_push(s_type, std::forward<_Args>(args)...)) == 0)
             {
                 for(int i = 16; i > 0; --i)
                 {
                     std::this_thread::yield();
-                    if ((count = logb->try_push<level>(s_type, std::forward<_Args>(args)...)) > 0)
+                    if ((count = logb->try_push(s_type, std::forward<_Args>(args)...)) > 0)
                         goto push_success;
                 }
 
                 for(int i = 0; i < 32; ++i)
                 {
                     std::this_thread::sleep_for(std::chrono::milliseconds(i));
-                    if ((count = logb->try_push<level>(s_type, std::forward<_Args>(args)...)) > 0)
+                    if ((count = logb->try_push(s_type, std::forward<_Args>(args)...)) > 0)
                         goto push_success;
                 }
             }
