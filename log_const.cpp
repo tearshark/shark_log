@@ -1,4 +1,4 @@
-#include <stdint.h>
+﻿#include <stdint.h>
 #include <chrono>
 
 #ifdef _MSC_VER
@@ -9,8 +9,8 @@
 
 namespace shark_log
 {
-    //ÿ΢���tick
-	uint64_t _log_tick_freq() noexcept
+    //每微秒的tick
+    uint64_t _log_tick_freq() noexcept
     {
         uint64_t stick = __rdtsc();
         auto sclock = std::chrono::high_resolution_clock::now();
@@ -22,11 +22,11 @@ namespace shark_log
                 break;
         }
 
-		uint64_t etick = __rdtsc();
-		auto eclock = std::chrono::high_resolution_clock::now();
+        uint64_t etick = __rdtsc();
+        auto eclock = std::chrono::high_resolution_clock::now();
 
-		auto dt = std::chrono::duration_cast<std::chrono::microseconds>(eclock - sclock);
+        auto dt = std::chrono::duration_cast<std::chrono::microseconds>(eclock - sclock);
 
         return (etick - stick) / dt.count();
-	}
+    }
 }

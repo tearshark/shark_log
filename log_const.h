@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <stdint.h>
 
 #ifdef _MSC_VER
@@ -33,7 +33,7 @@ namespace shark_log
         return __rdtsc();
     }
 
-    //ÿ΢���tick
+    //每微秒的tick
     extern uint64_t _log_tick_freq() noexcept;
 
     enum struct log_level : uint8_t
@@ -44,11 +44,11 @@ namespace shark_log
     };
 
 #if _HAS_CXX17 || _HAS_CXX20 || __cplusplus >= 201703L
-	constexpr
+    constexpr
 #else
-	inline
+    inline
 #endif
-	const char* _log_level_string(const log_level lvl) noexcept
+    const char* _log_level_string(const log_level lvl) noexcept
     {
         switch (lvl)
         {

@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "log_info.h"
 #include "log_buffer.h"
 #include "log_file.h"
@@ -11,17 +11,17 @@ namespace shark_log
 
     extern log_buffer* shark_log_local_buffer(size_t idx);
 
-    //³õÊ¼»¯ÈÕÖ¾ÏµÍ³
-    //factor : ´´½¨ÎÄ¼şµÄ¹¤³§
-    //binaryMode : ÊÇ·ñÊä³öÎª¶ş½øÖÆÄ£Ê½
-    //root : ¸ñÊ½»¯ÈÕÖ¾ÎÄ¼şÃûµÄ×Ö·û´®£¬ÄÚ²¿»áÌá¹©´´½¨µÄÊ±¼ä£¬ÓÃ{fmt}¸ñÊ½»¯³öÎÄ¼şÃû¡£
-    //      Èç "C:/logs/mylog-{0:04d}{1:02d}{2:02d}-{3:02d}{4:02d}{5:02d}.{6}"
+    //åˆå§‹åŒ–æ—¥å¿—ç³»ç»Ÿ
+    //factor : åˆ›å»ºæ–‡ä»¶çš„å·¥å‚
+    //binaryMode : æ˜¯å¦è¾“å‡ºä¸ºäºŒè¿›åˆ¶æ¨¡å¼
+    //root : æ ¼å¼åŒ–æ—¥å¿—æ–‡ä»¶åçš„å­—ç¬¦ä¸²ï¼Œå†…éƒ¨ä¼šæä¾›åˆ›å»ºçš„æ—¶é—´ï¼Œç”¨{fmt}æ ¼å¼åŒ–å‡ºæ–‡ä»¶åã€‚
+    //      å¦‚ "C:/logs/mylog-{0:04d}{1:02d}{2:02d}-{3:02d}{4:02d}{5:02d}.{6}"
     extern void shark_log_initialize(log_file_factory* factor, bool binaryMode, std::string root);
-    
-    //ÍË³öÇ°È·±£ÈÕÖ¾ÍêÕûÂäµØ£¬²¢Ïú»ÙÄÚ²¿Ïà¹ØÊı¾İ
+
+    //é€€å‡ºå‰ç¡®ä¿æ—¥å¿—å®Œæ•´è½åœ°ï¼Œå¹¶é”€æ¯å†…éƒ¨ç›¸å…³æ•°æ®
     extern void shark_log_destroy();
 
-    //Í¨Öª¸ñÊ½»¯Ïß³ÌÓĞÊı¾İ¿ÉÒÔĞ´Èë
+    //é€šçŸ¥æ ¼å¼åŒ–çº¿ç¨‹æœ‰æ•°æ®å¯ä»¥å†™å…¥
     extern void shark_log_notify_format(log_buffer* logb);
 
     template<log_level level, class... _Args>
@@ -31,19 +31,19 @@ namespace shark_log
         {
             using info_t = log_info<log_convert_t<_Args>...>;
 
-			log_buffer* logb = shark_log_local_buffer(_log_align_idx<info_t>());
+            log_buffer* logb = shark_log_local_buffer(_log_align_idx<info_t>());
 
             size_t count;
             if ((count = logb->try_push(s_type, std::forward<_Args>(args)...)) == 0)
             {
-                for(int i = 16; i > 0; --i)
+                for (int i = 16; i > 0; --i)
                 {
                     std::this_thread::yield();
                     if ((count = logb->try_push(s_type, std::forward<_Args>(args)...)) > 0)
                         goto push_success;
                 }
 
-                for(int i = 0; i < 32; ++i)
+                for (int i = 0; i < 32; ++i)
                 {
                     std::this_thread::sleep_for(std::chrono::milliseconds(i));
                     if ((count = logb->try_push(s_type, std::forward<_Args>(args)...)) > 0)

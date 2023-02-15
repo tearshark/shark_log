@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <exception>
 #include "log_file.h"
 
@@ -80,14 +80,14 @@ namespace shark_log
     template<> struct log_serialize<char8_t*> : log_Cstring_serialize<char8_t> {};
 #endif
 
-	template<class _Ty>
-	struct log_integer_serialize
-	{
-		using read_type = _Ty;
+    template<class _Ty>
+    struct log_integer_serialize
+    {
+        using read_type = _Ty;
         using unsigned_type = typename std::make_unsigned<_Ty>::type;
 
-		static bool write(const _Ty v, log_file& file)
-		{
+        static bool write(const _Ty v, log_file& file)
+        {
             unsigned_type value = v;
             uint8_t i8;
             do
@@ -95,38 +95,38 @@ namespace shark_log
                 i8 = (uint8_t)value;
                 if (value > 0x7f)
                     i8 |= 0x80;
-				if (!file.write(&i8, sizeof(uint8_t)))
+                if (!file.write(&i8, sizeof(uint8_t)))
                     return false;
                 value >>= 7;
             } while (value > 0);
 
             return true;
-		}
+        }
 
-		static bool read(read_type& v, log_file& file)
-		{
+        static bool read(read_type& v, log_file& file)
+        {
             unsigned_type value = 0;
-			uint8_t i8;
-			do
-			{
-				if (!file.read(&i8, sizeof(uint8_t)))
-					return false;
-				value = (value << 7) | i8;
-			} while (i8 > 0x7f);
+            uint8_t i8;
+            do
+            {
+                if (!file.read(&i8, sizeof(uint8_t)))
+                    return false;
+                value = (value << 7) | i8;
+            } while (i8 > 0x7f);
 
             v = value;
             return true;
-		}
-	};
+        }
+    };
 /*
-	template<> struct log_serialize<int8_t> : log_integer_serialize<int8_t> {};
-	template<> struct log_serialize<int16_t> : log_integer_serialize<int16_t> {};
-	template<> struct log_serialize<int32_t> : log_integer_serialize<int32_t> {};
-	template<> struct log_serialize<int64_t> : log_integer_serialize<int64_t> {};
-	template<> struct log_serialize<uint8_t> : log_integer_serialize<uint8_t> {};
-	template<> struct log_serialize<uint16_t> : log_integer_serialize<uint16_t> {};
-	template<> struct log_serialize<uint32_t> : log_integer_serialize<uint32_t> {};
-	template<> struct log_serialize<uint64_t> : log_integer_serialize<uint64_t> {};
+    template<> struct log_serialize<int8_t> : log_integer_serialize<int8_t> {};
+    template<> struct log_serialize<int16_t> : log_integer_serialize<int16_t> {};
+    template<> struct log_serialize<int32_t> : log_integer_serialize<int32_t> {};
+    template<> struct log_serialize<int64_t> : log_integer_serialize<int64_t> {};
+    template<> struct log_serialize<uint8_t> : log_integer_serialize<uint8_t> {};
+    template<> struct log_serialize<uint16_t> : log_integer_serialize<uint16_t> {};
+    template<> struct log_serialize<uint32_t> : log_integer_serialize<uint32_t> {};
+    template<> struct log_serialize<uint64_t> : log_integer_serialize<uint64_t> {};
 */
 
     inline bool log_serialize_to_file(log_file& file)

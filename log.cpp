@@ -1,4 +1,4 @@
-#include <iostream>
+Ôªø#include <iostream>
 #include <array>
 #include <mutex>
 #include "semaphore.h"
@@ -15,7 +15,7 @@ namespace shark_log
         }
         bool acquire()
         {
-            for(;;)
+            for (;;)
             {
                 intptr_t cnt = _counter.load(std::memory_order_relaxed);
                 if (cnt > 0)
@@ -29,10 +29,10 @@ namespace shark_log
     };
 
     log_level g_log_level = log_level::info;
-	int g_log_min_format_interval = 0;
+    int g_log_min_format_interval = 0;
     std::atomic<uint16_t> g_log_tid_counter{ 0 };
-    
-	static __time64_t g_log_start_clock;    //Œ¢√Î
+
+    static __time64_t g_log_start_clock;    //ÂæÆÁßí
     static uint64_t g_log_start_tick = 0;
     static uint64_t g_log_tick_freq = 1000;
 
@@ -156,8 +156,8 @@ namespace shark_log
 
     static void shark_log_loop_format(bool binaryMode)
     {
-		//SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-		//SetThreadAffinityMask(GetCurrentThread(), 1);
+        //SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+        //SetThreadAffinityMask(GetCurrentThread(), 1);
 
         try
         {
@@ -165,7 +165,7 @@ namespace shark_log
 
             for (; !g_log_exit;)
             {
-                g_log_notify.try_acquire_for(std::chrono::milliseconds(g_log_min_format_interval));   //√ø100ms«ø÷∆¬‰µÿ“ª¥Œ ˝æ›
+                g_log_notify.try_acquire_for(std::chrono::milliseconds(g_log_min_format_interval));   //ÊØè100msÂº∫Âà∂ËêΩÂú∞‰∏ÄÊ¨°Êï∞ÊçÆ
                 //if (!g_log_notify.acquire())
                 //    break;
                 shark_log_loop_all_mng(file.get(), binaryMode);
@@ -184,9 +184,9 @@ namespace shark_log
         assert(factor != nullptr);
         g_log_exit = false;
 
-		g_log_start_clock = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) * 1000000;
-		g_log_start_tick = _log_tick();
-		g_log_tick_freq = _log_tick_freq();
+        g_log_start_clock = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()) * 1000000;
+        g_log_start_tick = _log_tick();
+        g_log_tick_freq = _log_tick_freq();
 
         g_log_factor = factor;
         g_log_root = std::move(root);
@@ -206,7 +206,7 @@ namespace shark_log
 
         g_log_thread.join();
     }
-    
+
     void shark_log_notify_format(log_buffer* logb)
     {
         g_log_notify.release();

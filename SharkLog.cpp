@@ -1,3 +1,4 @@
+ï»¿#include <windows.h>
 #include <iostream>
 #include <fstream>
 #include <chrono>
@@ -12,16 +13,16 @@ using namespace shark_log;
 
 extern void test_spsc_ring_queue();
 
-//high_resolution_clock::now() : 45¸öÊ±ÖÓÖÜÆÚ
-//_log_tick() : 0.7¸öÊ±ÖÓÖÜÆÚ
+//high_resolution_clock::now() : 45ä¸ªæ—¶é’Ÿå‘¨æœŸ
+//_log_tick() : 0.7ä¸ªæ—¶é’Ÿå‘¨æœŸ
 void test_tick_performace()
 {
-	uint64_t s = _log_tick();
-	for (int i = 0; i < 10000; ++i)
-		(void)high_resolution_clock::now();
-	uint64_t e = _log_tick();
-	uint64_t dt = e - s;
-	fmt::print("now() cost time: {0} CPU cycles", dt);
+    uint64_t s = _log_tick();
+    for (int i = 0; i < 10000; ++i)
+        (void)high_resolution_clock::now();
+    uint64_t e = _log_tick();
+    uint64_t dt = e - s;
+    fmt::print("now() cost time: {0} CPU cycles", dt);
 }
 
 void benchmark_parse_result(const char* name, const char* path)
@@ -58,7 +59,7 @@ void benchmark_parse_result(const char* name, const char* path)
         uint64_t start = ticks.front();
         ticks.front() = 0;
 
-        for(auto iter = ticks.begin() + 1; iter != ticks.end(); ++iter)
+        for (auto iter = ticks.begin() + 1; iter != ticks.end(); ++iter)
         {
             auto& t = *iter;
             auto tmp = t;
@@ -75,15 +76,15 @@ void benchmark_parse_result(const char* name, const char* path)
         uint64_t avg = total / (ticks.size() - 1);
         uint64_t th50 = ticks[ticks.size() / 2];
         uint64_t th999 = ticks[ticks.size() * 999 / 1000];
-		uint64_t last = ticks.back();
+        uint64_t last = ticks.back();
 
-        fmt::print("'{}' cost time: min={} ns, avg={} ns, 50.0th={} ns, 99.9th={} ns, last={} ns\r\n", 
-            name, 
-            mintick * 1000 / freq, 
-            avg * 1000 / freq, 
-            th50 * 1000 / freq, 
+        fmt::print("'{}' cost time: min={} ns, avg={} ns, 50.0th={} ns, 99.9th={} ns, last={} ns\r\n",
+            name,
+            mintick * 1000 / freq,
+            avg * 1000 / freq,
+            th50 * 1000 / freq,
             th999 * 1000 / freq,
-            last * 1000/ freq);
+            last * 1000 / freq);
     }
 }
 template<class _Callback>
@@ -98,18 +99,18 @@ void benchmark_log_callback(const char* name, const _Callback& cb)
     for (size_t i = 0; i < TN; ++i)
     {
         log_thread[i] = std::thread([cb]
-        {
-            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-            SetThreadAffinityMask(GetCurrentThread(), 2);
-                
-            const size_t N = 50000;
-            for (int i = 0; i < N; ++i)
             {
-                cb();
-            }
+                SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+                SetThreadAffinityMask(GetCurrentThread(), 2);
 
-            shark_log_notify_format(nullptr);
-        });
+                const size_t N = 50000;
+                for (int i = 0; i < N; ++i)
+                {
+                    cb();
+                }
+
+                shark_log_notify_format(nullptr);
+            });
     }
 
     for (size_t i = 0; i < TN; ++i)
@@ -127,7 +128,7 @@ void benchmark_log()
 {
     benchmark_log_callback("staticString", []
         {
-        sharkl_info("Starting backup replica garbage collector thread");
+            sharkl_info("Starting backup replica garbage collector thread");
         });
     benchmark_log_callback("stringConcat", [] {
         sharkl_info("Opened session with coordinator at {}", "basic+udp:host=192.168.1.140,port=12246");
@@ -156,7 +157,7 @@ void test_log()
     for (int j = 0; j < K; ++j)
     {
         std::atomic<uint64_t> s;
-        s.store(_log_tick());       //¾¡Á¿²»ÈÃ±àÒëÆ÷ÂÒĞò
+        s.store(_log_tick());       //å°½é‡ä¸è®©ç¼–è¯‘å™¨ä¹±åº
 
         for (int i = 0; i < N; ++i)
         {
@@ -180,10 +181,10 @@ void test_log()
         }
 
         uint64_t t = _log_tick() - s.load(std::memory_order_acquire);
-        dt.fetch_add(t);       //¾¡Á¿²»ÈÃ±àÒëÆ÷ÂÒĞò
+        dt.fetch_add(t);       //å°½é‡ä¸è®©ç¼–è¯‘å™¨ä¹±åº
 
-        shark_log_notify_format(nullptr);       //Í¨Öª¸ñÊ½»¯Ïß³ÌÓĞÊı¾İĞ´Èë
-        std::this_thread::sleep_for(10ms);      //¸ø¸ñÊ½»¯Ïß³Ì×ã¹»µÄÊ±¼äÂäµØ£¬ÒÔ±ãÓÚÈ¡µÃ¸üºÃµÄĞ´ÈëÑÓ³Ù¡£
+        shark_log_notify_format(nullptr);       //é€šçŸ¥æ ¼å¼åŒ–çº¿ç¨‹æœ‰æ•°æ®å†™å…¥
+        std::this_thread::sleep_for(10ms);      //ç»™æ ¼å¼åŒ–çº¿ç¨‹è¶³å¤Ÿçš„æ—¶é—´è½åœ°ï¼Œä»¥ä¾¿äºå–å¾—æ›´å¥½çš„å†™å…¥å»¶è¿Ÿã€‚
     }
 
     const uint64_t freq = _log_tick_freq();
@@ -193,12 +194,12 @@ void test_log()
 
 int main(int argc, const char* argv[])
 {
-	static_assert(std::is_same_v<decltype(shark_decval(3, 8.0f, "Hello World!")), log_info<int, float, const char*>>, "");
+    static_assert(std::is_same_v<decltype(shark_decval(3, 8.0f, "Hello World!")), log_info<int, float, const char*>>, "");
 
     benchmark_log();
 
     //shark_log_initialize(shark_log_stdfile_factory(), false, "C:/logs/mylog-bench.txt");
     //sharkl_info("this is a test for disassembly {} / {}", 1, 2.0);
 
-	//shark_log_destroy();
+    //shark_log_destroy();
 }

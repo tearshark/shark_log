@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "log_const.h"
 #include "log_file.h"
 #include "log_serialize.h"
@@ -11,19 +11,19 @@ namespace shark_log
     using log_method_serialize = bool(void*, log_file*);
     using log_method_translate = bool(log_type&, log_file&, log_file&);
 
-    //ÃèÊöÈÕÖ¾Êı¾İ²»±ä»¯µÄ²¿·Ö
-    //Õâ¸öÀàĞÍÒªÎªÃ¿Ò»ÌõÈÕÖ¾Êä³öÓï¾äÉú³ÉÒ»·İ¾²Ì¬¾Ö²¿±äÁ¿£¬¹ÊÓĞ´ó²¿·ÖĞÅÏ¢ÊÇ²»»áÃ¿´Î¶¼¸Ä±äµÄ
-    //½«ÕâĞ©ĞÅÏ¢ËÑ¼¯µ½Ò»Æğ·ÀÖ¹£¬¼õÉÙÃ¿´ÎÊä³öĞèÒª¿½±´µÄÊı¾İÁ¿
+    //æè¿°æ—¥å¿—æ•°æ®ä¸å˜åŒ–çš„éƒ¨åˆ†
+    //è¿™ä¸ªç±»å‹è¦ä¸ºæ¯ä¸€æ¡æ—¥å¿—è¾“å‡ºè¯­å¥ç”Ÿæˆä¸€ä»½é™æ€å±€éƒ¨å˜é‡ï¼Œæ•…æœ‰å¤§éƒ¨åˆ†ä¿¡æ¯æ˜¯ä¸ä¼šæ¯æ¬¡éƒ½æ”¹å˜çš„
+    //å°†è¿™äº›ä¿¡æ¯æœé›†åˆ°ä¸€èµ·é˜²æ­¢ï¼Œå‡å°‘æ¯æ¬¡è¾“å‡ºéœ€è¦æ‹·è´çš„æ•°æ®é‡
     struct log_type
     {
-        log_method_formator* formator;      //¸ñÊ½»¯ÈÕÖ¾µÄº¯ÊıÖ¸Õë
+        log_method_formator* formator;      //æ ¼å¼åŒ–æ—¥å¿—çš„å‡½æ•°æŒ‡é’ˆ
         log_method_serialize* serialize;
         log_method_translate* translate;
-        const char* str;                    //ÈÕÖ¾¸ñÊ½»¯µÄ×Ö·û´®£¬ÓÉÓÚÀûÓÃ{fmt}À´ÊµÏÖ£¬¹ÊĞèÒª×ñÊØ{fmt}µÄÓï·¨¹æÔò
-        const char* file;                   //²úÉú±¾ÌõÈÕÖ¾µÄÎÄ¼şÃû
-        uint32_t line;                      //²úÉú±¾ÌõÈÕÖ¾µÄĞĞºÅ
-        uint16_t tid;                       //±¾ÈÕÖ¾µÄÀàĞÍ±àºÅ£¬ÓÃÓÚĞ´Èëµ½¶ş½øÖÆÎÄ¼ş¡£Ö®ºó¿ÉÒÔÀûÓÃtidÕÒ³öÀ´log_type£¬´Ó¶øÖØĞÂ¸ñÊ½»¯Îª¿ÉÔÄ¶ÁµÄÎÄ±¾ÈÕÖ¾¡£
-        log_level level;                    //²úÉú±¾ÌõÈÕÖ¾µÄÈÕÖ¾µÈ¼¶
+        const char* str;                    //æ—¥å¿—æ ¼å¼åŒ–çš„å­—ç¬¦ä¸²ï¼Œç”±äºåˆ©ç”¨{fmt}æ¥å®ç°ï¼Œæ•…éœ€è¦éµå®ˆ{fmt}çš„è¯­æ³•è§„åˆ™
+        const char* file;                   //äº§ç”Ÿæœ¬æ¡æ—¥å¿—çš„æ–‡ä»¶å
+        uint32_t line;                      //äº§ç”Ÿæœ¬æ¡æ—¥å¿—çš„è¡Œå·
+        uint16_t tid;                       //æœ¬æ—¥å¿—çš„ç±»å‹ç¼–å·ï¼Œç”¨äºå†™å…¥åˆ°äºŒè¿›åˆ¶æ–‡ä»¶ã€‚ä¹‹åå¯ä»¥åˆ©ç”¨tidæ‰¾å‡ºæ¥log_typeï¼Œä»è€Œé‡æ–°æ ¼å¼åŒ–ä¸ºå¯é˜…è¯»çš„æ–‡æœ¬æ—¥å¿—ã€‚
+        log_level level;                    //äº§ç”Ÿæœ¬æ¡æ—¥å¿—çš„æ—¥å¿—ç­‰çº§
     };
 
     template<class _Ty>
@@ -31,8 +31,8 @@ namespace shark_log
     {
         using type = typename std::remove_cv<typename std::remove_reference<_Ty>::type>::type;
     };
-    template<class _Ty, size_t N>
-    struct log_convert<_Ty[N]>
+    template<class _Ty, size_t _N>
+    struct log_convert<_Ty[_N]>
     {
         using type = typename std::remove_volatile<typename std::remove_reference<_Ty>::type>::type*;
     };
